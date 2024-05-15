@@ -44,7 +44,7 @@ const OverScenes = ({ setScene, result, txHash }) => {
       <header className="p-2 w-3/4">
         <div className="flex justify-between items-center w-20 rounded-md bg-darkgray mt-4 pl-2 pr-2">
           <Image src="/images/edit/stage.png" alt="" width={16} height={16} />
-          <div className="text-lg font-bold">4</div>
+          <div className="text-lg font-bold">0</div>
         </div>
       </header>
       <main
