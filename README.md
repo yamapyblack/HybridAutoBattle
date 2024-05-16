@@ -1,9 +1,8 @@
-# PlasmaBattle
+# HybridAutoBattle
 
+HybridAutoBattle combines Onchain and Offchain for both security and better UX, appealing to the mass.
 
 ![PlasmaBattle-logo](https://raw.githubusercontent.com/yamapyblack/PlasmaBattle/main/frontend/public/PlasmaBattle-logo.png)
-
-A starategic game with infinite scalablity
 
 ## Demo
 
@@ -11,28 +10,109 @@ https://plasma-battle.vercel.app/
 
 ## Description
 
-**Does an onchain game have to be fully onchain?**
+**Why Blockchain Game?**
 
-I'm an onchain maxi, but I disagree with the question. Let's consider Layer2 and Plasma. These technologies mean that not all transactions are necessary on Ethereum L1. Layer2 and Plasma try to make Ethereum's scalable with minimizing risks.
+The appeal of blockchain games is best captured by the phrase "Play to earn by your own assets". Players utilize their owned assets to play and earn new assets.
 
-Similarly, it's not necessary to put all game logic onchain. The Plasma architecture, which is implemented in this game, is a stateless design intended for a risk-minimized hybrid app. It enables an authentic, complex simulation game on the mainnet.
+This is similar to the analog Pokémon card game, where players use their favorite cards to battle and earn rare cards as rewards.
 
-PlasmaBattle will open the door to mass adoption for onchain games.
+Blockchain technology allows humanity to own digital data for the first time, as detailed by Chris Dixon, a partner at a16z, in his concept of "ReadWriteOwn". The fun lies in playing with owned assets and earning new ones.
 
+**Offchain Game vs Onchain Game**
 
-## Architecture
+Let's examine the current mainstream of blockchain games, Offchain games. "Do users truly own these assets?" Even if they do, can these assets be freely issued or devalued by the admin's authority?
 
-![PlasmaBattle-architecutre](https://github.com/yamapyblack/PlasmaBattle/blob/main/frontend/public/images/lp/PlasmaBattle-architecutre.png?raw=true)
+This is akin to the issues between CeFi and DeFi. In response, we developed a decentralized game, an Onchain game. However, Onchain games suffer from poor UX and the risk of smart contract hacking (as many DeFi projects have been hacked).
 
-The necessary information for onchain is only required at the start and at the end; the computing of the middle phase is offchain. The battle result is determined by the computation of the game master. Some criticize this as centralization, but in fact, the risk is quite minimal.
+**What is the Hybrid Game**
 
-The battle logic can be computed by anyone because the source code is open, so any mistakes by the game master can be pointed out.
+We propose a "HybridGame", maintaining asset ownership (Self-custody) while running the game Offchain to enhance UX.
 
-Users only need to send two transactions, at the beginning and at the end, using the Plasma Architecture. This architecture makes onchain games infinitely scalable.
+Specifically, the game records three elements Onchain: the "start state," "end state," and "random number seed." This system is inspired by the Ethereum Layer2 solution "Plasma," and we named it "PlasmaEngine". Plasma writes the initial and final states to Ethereum L1, with intermediate states handled Offchain.
 
-## Contract addresses(Scroll sepolia)
+With "PlasmaEngine," we can offer scalable games while ensuring asset ownership.
 
-PlasmaBattle
+**The Detail of PlasmaEngine**
 
-https://sepolia.scrollscan.com/address/0xc7Bab26f78A8ac0C573B0670D85c590aF3dD9Fa4
+This engine is primarily designed for auto-progress strategy battle games (not applicable to all game genres).
+
+In games using this engine, users make only two transactions: at the start and end of the game.
+
+1. The user strategizes, selects battle members, equips them, and prepares.
+
+2. Once ready, the user initiates the battle with a transaction.
+
+3. This transaction records the random number seed Onchain.
+
+4. The battle begins, conducted entirely Offchain using Onchain data.
+
+5. The admin signs the battle result and returns it to the user.
+
+6. The user receives the signature and records the end transaction.
+
+7. The battle result is recorded Onchain.
+
+Some critics may point out the need for the admin's private key, suggesting centralization. However, the scope is limited, and any admin misconduct is easily detectable, as the random number seed is public (assuming the battle logic is open-source). With the start state and random seed, anyone can verify the end state at any point.
+
+Currently, there is no mechanism to forcibly correct detected misconduct. We don't believe it's necessary, but technically, it is possible to implement FraudProof or ZkProof like Rollups.
+
+Finally, it would be ideal if users could claim tokens based on Onchain battle results (waiting about seven days might be prudent).
+
+## Contract Deployment
+
+```
+cd zksync
+```
+
+Enviroment
+
+.env (This is admin signer address)
+
+```
+WALLET_PRIVATE_KEY=0x...
+```
+
+Install
+
+```
+npm install
+```
+
+Deploy
+
+```
+npx hardhat run deploy/deploy.ts --network zkSyncSepoliaTestnet
+```
+
+## Contract addresses(zkSync sepolia)
+
+BattleContract
+
+[0x3979d863D02Ce04fc5B8932537b9f69c402B2911](https://sepolia.explorer.zksync.io/address/0x3979d863D02Ce04fc5B8932537b9f69c402B2911)
+
+## Frontend
+
+```
+cd frontend
+```
+
+Enviroment
+
+.env (Same as onchain's signer address)
+
+```
+PRIVATE_KEY=0x...
+```
+
+Install
+
+```
+bun install
+```
+
+Start
+
+```
+bun run dev
+```
 
