@@ -2,10 +2,7 @@
 
 HybridAutoBattle combines Onchain and Offchain for both security and better UX, appealing to the mass.
 
-
 ![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/HybridAutoBattle.png?raw=true)
-
-
 
 ## Demo
 
@@ -23,11 +20,15 @@ Blockchain technology allows humanity to own digital data for the first time, as
 
 **Offchain Game vs Onchain Game**
 
+![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/onchainOrOffchain.png?raw=true)
+
 Let's examine the current mainstream of blockchain games, Offchain games. "Do users truly own these assets?" Even if they do, can these assets be freely issued or devalued by the admin's authority?
 
 This is akin to the issues between CeFi and DeFi. In response, we developed a decentralized game, an Onchain game. However, Onchain games suffer from poor UX and the risk of smart contract hacking (as many DeFi projects have been hacked).
 
 **What is the Hybrid Game**
+
+![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/hybrid.png?raw=true)
 
 We propose a "HybridGame", maintaining asset ownership (Self-custody) while running the game Offchain to enhance UX.
 
@@ -36,6 +37,8 @@ Specifically, the game records three elements Onchain: the "start state," "end s
 With "PlasmaEngine," we can offer scalable games while ensuring asset ownership.
 
 **The Detail of PlasmaEngine**
+
+![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/PlasmaBattle-architecutre.png?raw=true)
 
 This engine is primarily designed for auto-progress strategy battle games (not applicable to all game genres).
 
