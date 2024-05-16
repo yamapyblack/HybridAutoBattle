@@ -2,7 +2,10 @@
 
 HybridAutoBattle combines Onchain and Offchain for both security and better UX, appealing to the mass.
 
-![PlasmaBattle-logo](https://raw.githubusercontent.com/yamapyblack/PlasmaBattle/main/frontend/public/PlasmaBattle-logo.png)
+
+![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/HybridAutoBattle.png?raw=true)
+
+
 
 ## Demo
 
