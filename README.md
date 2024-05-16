@@ -20,7 +20,7 @@ Blockchain technology allows humanity to own digital data for the first time, as
 
 **Offchain Game vs Onchain Game**
 
-![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/onchainOrOffchain.png?raw=true)
+![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/onchainOrOffchain.jpeg?raw=true)
 
 Let's examine the current mainstream of blockchain games, Offchain games. "Do users truly own these assets?" Even if they do, can these assets be freely issued or devalued by the admin's authority?
 
@@ -28,7 +28,7 @@ This is akin to the issues between CeFi and DeFi. In response, we developed a de
 
 **What is the Hybrid Game**
 
-![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/hybrid.png?raw=true)
+![logo](https://github.com/yamapyblack/HybridAutoBattle/blob/main/frontend/public/hybrid.jpeg?raw=true)
 
 We propose a "HybridGame", maintaining asset ownership (Self-custody) while running the game Offchain to enhance UX.
 
