@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { postBattleAllApi } from "../lib/data/apiHandler";
-import { getAllStates } from "../lib/data/stateHandler";
 import { type Unit } from "../lib/interfaces/interface";
 
 const ApiTest = () => {

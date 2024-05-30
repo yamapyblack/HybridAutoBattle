@@ -3,7 +3,7 @@ import {
   SKILL_EFFECT,
   SKILL_TARGET,
   SKILL_TIMING,
-} from "../lib/interfaces/interface";
+} from "../interfaces/interface";
 
 export const SKILLS: { [key: number]: Skill } = {
   1: {
@@ -108,7 +108,7 @@ export const SKILLS: { [key: number]: Skill } = {
   12: {
     id: 12,
     name: "StartBAttackFront2",
-    description: "",
+    description: "Start of battle: Give +2 attack to front unit.",
     timing: SKILL_TIMING.StartOfBattle,
     effect: SKILL_EFFECT.BuffAttack,
     target: SKILL_TARGET.InFrontOf,
@@ -122,5 +122,23 @@ export const SKILLS: { [key: number]: Skill } = {
     effect: SKILL_EFFECT.BuffHealth,
     target: SKILL_TARGET.Behind,
     value: 1,
+  },
+  14: {
+    id: 14,
+    name: "StartBHealthFront2",
+    description: "",
+    timing: SKILL_TIMING.StartOfBattle,
+    effect: SKILL_EFFECT.BuffHealth,
+    target: SKILL_TARGET.InFrontOf,
+    value: 2,
+  },
+  15: {
+    id: 15,
+    name: "StartBHealthBehind2",
+    description: "",
+    timing: SKILL_TIMING.StartOfBattle,
+    effect: SKILL_EFFECT.BuffHealth,
+    target: SKILL_TARGET.Behind,
+    value: 2,
   },
 };

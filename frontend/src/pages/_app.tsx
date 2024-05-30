@@ -1,4 +1,5 @@
 import type { AppProps } from "next/app";
+import { useRouter } from "next/router";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { scrollSepolia, zkSyncSepoliaTestnet } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
@@ -32,15 +33,21 @@ const config = createConfig(
 
 const queryClient = new QueryClient();
 function MyApp({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+
   return (
     <>
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <ConnectKitProvider>
-            <Component {...pageProps} />
-          </ConnectKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+      {router.pathname.startsWith("/lp") ? (
+        <Component {...pageProps} />
+      ) : (
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <ConnectKitProvider>
+              <Component {...pageProps} />
+            </ConnectKitProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
+      )}
     </>
   );
 }

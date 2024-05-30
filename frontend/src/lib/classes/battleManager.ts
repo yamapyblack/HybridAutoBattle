@@ -4,9 +4,8 @@ import {
   SKILL_EFFECT,
   SKILL_TARGET,
   Skill,
-} from "../interfaces/interface";
-import { initMainMembers, enemyMembersByStage } from "../data/init";
-import { SKILLS } from "../../constants/skills";
+} from "src/lib/interfaces/interface";
+import { SKILLS } from "src/lib/data/skills";
 import Unit, { IUnit } from "./unitClass";
 
 /**============================

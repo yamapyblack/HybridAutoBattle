@@ -2,204 +2,249 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Scene } from "../../pages/index";
 import EditUnitComponent from "../ingame/EditUnitComponent";
-import { PlasmaBattleAlphaAbi } from "src/constants/plasmaBattleAlphaAbi";
-import addresses from "src/constants/addresses";
-import { useReadContract, useAccount } from "wagmi";
-import { initMainMembers, initSubMembers } from "src/lib/data/init";
 import StartBattle from "../transactions/StartBattle";
+import HeaderComponent from "../../components/ingame/HeaderComponent";
+import {
+  useReadPlayerUnits,
+  useReadSubUnits,
+} from "src/lib/hooks/useContractManager";
+import { convertUnitIdsToNumber } from "src/lib/utils/Utils";
+import { initPlayerIds } from "src/lib/data/init";
 
 type DragAndDrop = {
   index: number;
   isSub: boolean;
 };
 
-const initPlayerIds = [1];
-
-const EditScenes = ({ setScene }) => {
+const EditScenes = () => {
   /**============================
  * useState
  ============================*/
-  const { address } = useAccount();
-
-  const [playerUnitIds, setPlayerUnitIds] = useState<number[]>([]);
-  const [subUnitIds, setSubUnitIds] = useState<number[]>([]);
-
-  const dataPlayerUnits = useReadContract({
-    abi: PlasmaBattleAlphaAbi,
-    address: addresses.PlasmaBattleAlpha as `0x${string}`,
-    functionName: "getPlayerUnits",
-    args: [address as `0x${string}`],
-  });
-
-  const dataSubUnits = useReadContract({
-    abi: PlasmaBattleAlphaAbi,
-    address: addresses.PlasmaBattleAlpha as `0x${string}`,
-    functionName: "getSubUnits",
-    args: [address as `0x${string}`],
-  });
+  //Show stage
+  const [stage, setStage] = useState(-1);
+  const [isCoverVisible, setCoverVisible] = useState(true);
+  const onStageChange = async (stage: number) => {
+    console.log("stage", stage);
+    if (stage === -1) return;
+    setStage(stage);
+  };
 
   //Set dragged and dropped unit for replacing
   const [draggedIndex, setDraggedIndex] = useState<DragAndDrop | null>(null);
   const [droppedIndex, setDroppedIndex] = useState<DragAndDrop | null>(null);
 
+  const [playerUnitIds, setPlayerUnitIds] = useState<number[]>([]);
+  const [subUnitIds, setSubUnitIds] = useState<number[]>([]);
+
+  const dataPlayerUnits = useReadPlayerUnits();
+  const dataSubUnits = useReadSubUnits();
+
   /**============================
  * useEffect
  ============================*/
-  //Get player units from contract
-
+  //Get player and sub units from contract
   useEffect(() => {
-    if (dataPlayerUnits.data) {
-      console.log("playerUnitIds.data", dataPlayerUnits.data);
-      //If dataPlayerUnits.data are all 0 array, set initial members
-      if ((dataPlayerUnits.data as []).every((id) => Number(id) === 0)) {
+    if (dataPlayerUnits) {
+      //If dataPlayerUnits are all 0 array, set initial members
+      if ((dataPlayerUnits as []).every((id) => Number(id) === 0)) {
         setPlayerUnitIds(initPlayerIds);
       } else {
-        setPlayerUnitIds(dataPlayerUnits.data as []);
+        const _playerUnitIds = convertUnitIdsToNumber(
+          dataPlayerUnits as BigInt[]
+        );
+        setPlayerUnitIds(_playerUnitIds);
       }
     }
-  }, [dataPlayerUnits.data]);
+  }, [dataPlayerUnits]);
 
   useEffect(() => {
-    if (dataSubUnits.data) {
-      setSubUnitIds(dataSubUnits.data as []);
+    if (dataSubUnits) {
+      const _subUnitIds = convertUnitIdsToNumber(dataSubUnits as BigInt[]);
+      setSubUnitIds(_subUnitIds);
     }
-  }, [dataSubUnits.data]);
+  }, [dataSubUnits]);
 
   //Replace unit position if dragged and dropped
-  // useEffect(() => {
-  //   if (draggedIndex === null || droppedIndex === null) return;
-  //   if (draggedIndex === droppedIndex) return;
+  useEffect(() => {
+    if (draggedIndex === null || droppedIndex === null) return;
+    if (draggedIndex === droppedIndex) return;
 
-  // const [unitA, _dispatchA] = draggedIndex.isSub
-  //   ? [subUnits[draggedIndex.index], subDispatch]
-  //   : [playerUnits[draggedIndex.index], playerDispatch];
+    console.log("replaceUnits", draggedIndex, droppedIndex);
 
-  // const [unitB, _dispatchB] = droppedIndex.isSub
-  //   ? [subUnits[droppedIndex.index], subDispatch]
-  //   : [playerUnits[droppedIndex.index], playerDispatch];
+    const _playerUnitIds = [...playerUnitIds];
+    const _subUnitIds = [...subUnitIds];
 
-  //   console.log("replaceUnits", draggedIndex, droppedIndex);
-  //   console.log("unitA", unitA);
-  //   console.log("unitB", unitB);
+    //From sub to main
+    if (draggedIndex.isSub && !droppedIndex.isSub) {
+      const draggedUnitId = _subUnitIds[draggedIndex.index];
+      //if droppedIndex's over playerUnitIds length, push playerUnitIds and shift subUnitIds
+      if (droppedIndex.index > _playerUnitIds.length - 1) {
+        _playerUnitIds.push(draggedUnitId);
+        _subUnitIds.splice(draggedIndex.index, 1);
+      } else {
+        //Replace
+        const droppedUnitId = _playerUnitIds[droppedIndex.index];
+        _playerUnitIds[droppedIndex.index] = draggedUnitId;
+        _subUnitIds[draggedIndex.index] = droppedUnitId;
+      }
+    }
+    //From main to sub
+    else if (!draggedIndex.isSub && droppedIndex.isSub) {
+      const draggedUnitId = _playerUnitIds[draggedIndex.index];
+      //Replace
+      const droppedUnitId = _subUnitIds[droppedIndex.index];
+      _subUnitIds[droppedIndex.index] = draggedUnitId;
+      _playerUnitIds[draggedIndex.index] = droppedUnitId;
+    }
+    //From main to main
+    else if (!draggedIndex.isSub && !droppedIndex.isSub) {
+      const draggedUnitId = _playerUnitIds[draggedIndex.index];
+      //if droppedIndex's over playerUnitIds length, shift and push playerUnitIds
+      if (droppedIndex.index > _playerUnitIds.length - 1) {
+        _playerUnitIds.splice(draggedIndex.index, 1);
+        _playerUnitIds.push(draggedUnitId);
+      } else {
+        //Replace
+        const droppedUnitId = _playerUnitIds[droppedIndex.index];
+        _playerUnitIds[droppedIndex.index] = draggedUnitId;
+        _playerUnitIds[draggedIndex.index] = droppedUnitId;
+      }
+    }
+    //From sub to sub
+    else {
+      const draggedUnitId = _subUnitIds[draggedIndex.index];
+      //Replace
+      const droppedUnitId = _subUnitIds[droppedIndex.index];
+      _subUnitIds[droppedIndex.index] = draggedUnitId;
+      _subUnitIds[draggedIndex.index] = droppedUnitId;
+    }
 
-  //   //If drop the position where there is no unit, delete and add
-  //   if (unitB === undefined) {
-  //     console.log("delete and add");
-  //     _dispatchA({
-  //       type: "deleted",
-  //       index: draggedIndex.index,
-  //     });
-  //     _dispatchB({
-  //       type: "added",
-  //       unit: unitA,
-  //       index: droppedIndex.index, // unused
-  //     });
-  //     setDraggedIndex(null);
-  //     setDroppedIndex(null);
-  //     return;
-  //   }
+    // Update the state
+    setPlayerUnitIds(_playerUnitIds);
+    setSubUnitIds(_subUnitIds);
+    //Clear dragged and dropped
+    setDraggedIndex(null);
+    setDroppedIndex(null);
+  }, [
+    draggedIndex,
+    droppedIndex,
+    playerUnitIds,
+    subUnitIds,
+    setPlayerUnitIds,
+    setSubUnitIds,
+    setDraggedIndex,
+    setDroppedIndex,
+  ]);
 
-  //   _dispatchA({
-  //     type: "changed",
-  //     index: draggedIndex.index,
-  //     unit: unitB,
-  //   });
-  //   _dispatchB({
-  //     type: "changed",
-  //     index: droppedIndex.index,
-  //     unit: unitA,
-  //   });
-  //   setDraggedIndex(null);
-  //   setDroppedIndex(null);
-  // }, [
-  //   draggedIndex,
-  //   droppedIndex,
-  //   playerUnits,
-  //   subUnits,
-  //   playerDispatch,
-  //   subDispatch,
-  //   setDraggedIndex,
-  //   setDroppedIndex,
-  // ]);
+  // Function to handle double click on player unit
+  const handleDoubleClick = (index: number, isSub: boolean) => {
+    // If there's only one unit, do nothing
+    if (playerUnitIds.length === 1) return;
+    if (isSub) return;
+
+    const _playerUnitIds = [...playerUnitIds];
+    const _subUnitIds = [...subUnitIds];
+
+    const unitId = _playerUnitIds[index];
+
+    // Remove the unit from playerUnitIds and add it to subUnitIds
+    _playerUnitIds.splice(index, 1);
+    _subUnitIds.push(unitId);
+
+    // Update the state
+    setPlayerUnitIds(_playerUnitIds);
+    setSubUnitIds(_subUnitIds);
+  };
 
   /**============================
  * Rendering
  ============================*/
   return (
-    <div className="flex flex-col items-center m-auto">
-      <header className="p-2 w-3/4">
-        <div className="flex justify-between items-center w-20 rounded-md bg-darkgray mt-4 pl-2 pr-2">
-          <Image src="/images/edit/stage.png" alt="" width={16} height={16} />
-          <div className="text-lg font-bold">1</div>
-        </div>
-      </header>
-      <main
-        className="flex flex-col"
-        style={{ width: "800px", margin: "auto" }}
-      >
-        <section className="mt-8">
+    <>
+      {isCoverVisible && (
+        <>
           <div
-            className="flex justify-end p-4 mx-auto bg-darkgray"
-            style={{ width: "640px" }}
+            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30"
+            style={{ zIndex: 999 }}
+            onClick={() => setCoverVisible(false)}
           >
-            <div
-              className="mx-auto p-2 flex flex-row-reverse"
-              style={{ height: 132 }}
-            >
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div className="mx-4" key={index}>
-                  <EditUnitComponent
-                    index={index}
-                    unitId={playerUnitIds[index]}
-                    isSub={false}
-                    setDraggedIndex={setDraggedIndex}
-                    setDroppedIndex={setDroppedIndex}
-                  />
-                </div>
-              ))}
+            <div className="text-center text-8xl">
+              {(() => {
+                if (stage === 2) return "Final Stage";
+                return `Stage ${stage + 1}`;
+              })()}
             </div>
           </div>
-        </section>
-        <section className="mt-8">
-          <div className="flex justify-end p-4">
+        </>
+      )}
+      <div className="flex flex-col items-center m-auto">
+        <HeaderComponent onStageChange={onStageChange} />
+        <main
+          className="flex flex-col"
+          style={{ width: "800px", margin: "auto" }}
+        >
+          <section className="mt-8">
             <div
-              className="mx-20 p-2 flex flex-row-reverse"
-              style={{ height: 132 }}
+              className="flex justify-end p-4 mx-auto bg-darkgray"
+              style={{ width: "640px" }}
             >
-              {subUnitIds.map((_unitId, index) => (
-                <div className="mx-4" key={index}>
-                  <EditUnitComponent
-                    index={index}
-                    unitId={_unitId}
-                    isSub={true}
-                    setDraggedIndex={setDraggedIndex}
-                    setDroppedIndex={setDroppedIndex}
-                  />
-                </div>
-              ))}
+              <div
+                className="mx-auto p-2 flex flex-row-reverse"
+                style={{ height: 132 }}
+              >
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div className="mx-4" key={index}>
+                    <EditUnitComponent
+                      index={index}
+                      unitId={playerUnitIds[index]}
+                      isSub={false}
+                      setDraggedIndex={setDraggedIndex}
+                      setDroppedIndex={setDroppedIndex}
+                      handleDoubleClick={() => {
+                        handleDoubleClick(index, false);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-        <section className="mt-8">
-          <div className="text-center">
-            {/* <button
-              className="bg-sub font-bold px-8 py-3 rounded-md text-decoration-none"
-              onClick={() => setScene(Scene.Battle)}
-            >
-              Play
-            </button> */}
-            <StartBattle
-              playerUnitIds={playerUnitIds}
-              subUnitIds={subUnitIds}
-              onSuccess={() => {}}
-              onComplete={() => {
-                setScene(Scene.Battle);
-              }}
-            />
-          </div>
-        </section>
-      </main>
-    </div>
+          </section>
+          <section className="mt-8">
+            <div className="flex justify-end p-4">
+              <div
+                className="mx-20 p-2 flex flex-row-reverse"
+                style={{ height: 132 }}
+              >
+                {subUnitIds.map((_unitId, index) => (
+                  <div className="mx-4" key={index}>
+                    <EditUnitComponent
+                      index={index}
+                      unitId={_unitId}
+                      isSub={true}
+                      setDraggedIndex={setDraggedIndex}
+                      setDroppedIndex={setDroppedIndex}
+                      handleDoubleClick={() => {
+                        handleDoubleClick(index, true);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+          <section className="mt-8">
+            <div className="text-center">
+              <StartBattle
+                playerUnitIds={playerUnitIds}
+                subUnitIds={subUnitIds}
+                onSuccess={() => {}}
+                onComplete={() => {}}
+              />
+            </div>
+          </section>
+        </main>
+      </div>
+    </>
   );
 };
 

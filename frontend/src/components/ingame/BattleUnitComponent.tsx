@@ -1,79 +1,66 @@
-import { useContext } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { useAnimate } from "framer-motion";
 import { type Unit, type UnitVariable } from "src/lib/interfaces/interface";
 
 interface UnitComponentProps {
-  isPlayer: boolean;
   index: number;
   unit?: Unit;
   unitVariable?: UnitVariable;
-  resetIsAnimation: () => void;
 }
 
-const BattleUnitComponent = ({
-  isPlayer,
-  index,
-  unit,
-  unitVariable,
-  resetIsAnimation,
-}: UnitComponentProps) => {
-  if (!unit || !unitVariable) return;
+const BattleUnitComponent = ({ unit, unitVariable }: UnitComponentProps) => {
+  const [scope, animate] = useAnimate();
 
-  const unitImageSize = 68;
-  const attackImageSize = 28;
-  const lifeImageSize = 28;
-  const width = "w-8";
+  useEffect(() => {
+    const doAnimate = async () => {
+      await animate(scope.current, { y: -20 }, { duration: 0.1 });
+      await animate(scope.current, { y: 0 }, { duration: 0.1 });
+      await animate(scope.current, { y: -20 }, { duration: 0.1 });
+      await animate(scope.current, { y: 0 }, { duration: 0.1 });
+      unitVariable!.isAnimateAttacking = false;
+    };
+    if (unitVariable!.isAnimateAttacking) {
+      doAnimate();
+    }
+  }, [unitVariable, animate, scope]);
+
+  if (!unit || !unitVariable) return;
 
   return (
     <>
-      <motion.div
-        initial={{ y: 0 }}
-        animate={unitVariable.isAnimateAttacking ? { y: -20 } : {}}
-        transition={{
-          repeatType: "mirror",
-          repeat: 1,
-          duration: 0.16,
-          type: "spring",
-        }}
-        onAnimationComplete={() => {
-          resetIsAnimation();
-        }}
-      >
+      <div ref={scope}>
         <Image
           src={`/images/cards/${unit.imagePath}.png`}
           alt=""
-          width={unitImageSize}
+          width={84}
           height={16}
         />
-      </motion.div>
+      </div>
       <div className="flex justify-between">
-        <div className={`${width} relative`}>
+        <div className={`w-8 relative`}>
           <Image
             src="/images/common/attack.png"
             alt=""
-            width={attackImageSize}
-            height={attackImageSize}
+            width={36}
+            height={36}
           />
           <NumberComponent
-            index={index}
             value={unitVariable.attack}
             isAnimate={unitVariable.isAnimateChangeAttack}
-            resetIsAnimation={resetIsAnimation}
+            resetIsAnimation={() => {
+              unitVariable.isAnimateChangeAttack = false;
+            }}
           />
         </div>
-        <div className={`${width} relative`}>
-          <Image
-            src="/images/common/life.png"
-            alt=""
-            width={lifeImageSize}
-            height={lifeImageSize}
-          />
+        <div className={`w-8 relative`}>
+          <Image src="/images/common/life.png" alt="" width={36} height={36} />
           <NumberComponent
-            index={index}
             value={unitVariable.life}
             isAnimate={unitVariable.isAnimateChangeLife}
-            resetIsAnimation={resetIsAnimation}
+            resetIsAnimation={() => {
+              unitVariable.isAnimateChangeLife = false;
+            }}
           />
         </div>
       </div>
@@ -81,44 +68,46 @@ const BattleUnitComponent = ({
   );
 };
 
-const NumberComponent = ({ index, value, isAnimate, resetIsAnimation }) => {
-  const cellWidth = 24;
+const NumberComponent = ({ value, isAnimate, resetIsAnimation }) => {
+  const cellWidth = 32;
+  const [scope, animate] = useAnimate();
+
+  useEffect(() => {
+    const doAnimate = async () => {
+      await animate(
+        scope.current,
+        { width: cellWidth * 3, x: -cellWidth, y: -cellWidth },
+        { duration: 0.1 }
+      );
+      await animate(
+        scope.current,
+        { width: cellWidth, x: 0, y: 0 },
+        { duration: 0.1 }
+      );
+      resetIsAnimation();
+    };
+    if (isAnimate) {
+      doAnimate();
+    }
+  }, [isAnimate, animate, scope, resetIsAnimation]);
 
   return (
-    <motion.div
+    <div
+      ref={scope}
       style={{
         position: "absolute",
-        left: 2,
-        top: 3,
-      }}
-      initial={{ width: cellWidth, x: 0, y: 0 }}
-      animate={
-        isAnimate
-          ? {
-              width: cellWidth * 2,
-              x: -cellWidth / 2,
-              y: -cellWidth / 2,
-            }
-          : {}
-      }
-      transition={{
-        repeatType: "mirror",
-        repeat: 1,
-        duration: 0.2,
-        type: "spring",
-      }}
-      onAnimationComplete={() => {
-        // console.log("Animation completed");
-        resetIsAnimation();
+        left: 0,
+        top: 2,
+        width: cellWidth,
       }}
     >
       <Image
         src={`/images/common/numbers/${value}.png`}
         alt=""
-        width={100}
-        height={100}
+        width={120}
+        height={120}
       />
-    </motion.div>
+    </div>
   );
 };
 

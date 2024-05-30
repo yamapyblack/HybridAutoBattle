@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 import {PlasmaBattle, Result} from "../core/PlasmaBattle.sol";
+
+// import {console2} from "forge-std/console2.sol";
+
+interface IERC721Alpha {
+    function mint(address to) external;
+}
 
 contract PlasmaBattleAlpha is PlasmaBattle {
     error InvalidUnitId();
@@ -19,11 +25,58 @@ contract PlasmaBattleAlpha is PlasmaBattle {
     // Mapping(playerAddress => playerUnits)
     mapping(address => uint[5]) playerUnits;
     mapping(address => uint[5]) subUnits;
+    // For alpha testing
+    mapping(uint => uint) public newUnitByStage;
+    mapping(uint => uint[5]) public enemyUnitsByStage;
+    mapping(uint => uint) public maxUnitIdByStage;
+    //TODO will be changed
+    uint public maxStage = 2;
+    address nftAddress;
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address _signer) PlasmaBattle(_signer) {}
+    constructor(address _signer) PlasmaBattle(_signer) {
+        //Set newUnitsByStage
+        newUnitByStage[1] = 4;
+        newUnitByStage[2] = 5;
+        //Set enemyUnitsByStage
+        enemyUnitsByStage[0] = [8001, 8002, 8003];
+        enemyUnitsByStage[1] = [8002, 8002, 8003, 8003];
+        enemyUnitsByStage[2] = [8004, 8005, 8004];
+        //Set maxUnitIdByStage
+        // maxUnitIdByStage[0] = 1;
+        // maxUnitIdByStage[1] = 2;
+        // maxUnitIdByStage[2] = 3;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            OWNER UPDATE
+    //////////////////////////////////////////////////////////////*/
+    function setNewUnitByStage(
+        uint _stage,
+        uint _newUnitId
+    ) external onlyOwner {
+        newUnitByStage[_stage] = _newUnitId;
+    }
+
+    function setEnemyUnitsByStage(
+        uint _stage,
+        uint[5] memory _enemyUnits
+    ) external onlyOwner {
+        enemyUnitsByStage[_stage] = _enemyUnits;
+    }
+
+    function setMaxUnitIdByStage(
+        uint _stage,
+        uint _maxUnitId
+    ) external onlyOwner {
+        maxUnitIdByStage[_stage] = _maxUnitId;
+    }
+
+    function setNftAddress(address _nftAddress) external onlyOwner {
+        nftAddress = _nftAddress;
+    }
 
     /*//////////////////////////////////////////////////////////////
                             EXTERNAL UPDATE
@@ -32,9 +85,10 @@ contract PlasmaBattleAlpha is PlasmaBattle {
         uint[5] memory _playerUnits,
         uint[5] memory _subUnits
     ) external returns (uint) {
-        if (!validateUnits(playerStage[msg.sender], _playerUnits, _subUnits)) {
-            revert InvalidUnitId();
-        }
+        //TODO revisit this
+        // if (!validateUnits(playerStage[msg.sender], _playerUnits, _subUnits)) {
+        //     revert InvalidUnitId();
+        // }
         playerUnits[msg.sender] = _playerUnits;
         subUnits[msg.sender] = _subUnits;
         return _startBattle();
@@ -48,6 +102,12 @@ contract PlasmaBattleAlpha is PlasmaBattle {
         _endBattle(_battleId, _result, _signature);
         address _player = battleRecord[_battleId].player;
         if (_result == Result.WIN) {
+            if (playerStage[_player] == maxStage) {
+                //mintNFT
+                IERC721Alpha(nftAddress).mint(msg.sender);
+                return;
+            }
+
             //Increment player stage if win
             uint _newStage = playerStage[_player] + 1;
             playerStage[_player] = _newStage;
@@ -56,7 +116,7 @@ contract PlasmaBattleAlpha is PlasmaBattle {
             uint[5] storage _subUnits = subUnits[_player];
             for (uint8 i = 0; i < 5; i++) {
                 if (_subUnits[i] == 0) {
-                    _subUnits[i] = _getNewUnit(_newStage);
+                    _subUnits[i] = newUnitByStage[_newStage];
                     break;
                 }
             }
@@ -78,39 +138,16 @@ contract PlasmaBattleAlpha is PlasmaBattle {
         return subUnits[_player];
     }
 
-    //TODO Owner can change this
-    function getEnemyUnits(uint _stage) external pure returns (uint[5] memory) {
-        if (_stage == 0) {
-            return [uint(6), 0, 0, 0, 0];
-        } else if (_stage == 1) {
-            return [uint(6), 7, 0, 0, 0];
-        } else if (_stage == 2) {
-            return [uint(6), 7, 8, 0, 0];
-        } else if (_stage == 3) {
-            return [uint(6), 7, 8, 9, 0];
-        } else if (_stage == 4) {
-            return [uint(6), 7, 8, 9, 10];
-        }
-        return [uint(0), 0, 0, 0, 0];
+    function getEnemyUnits(uint _stage) external view returns (uint[5] memory) {
+        return enemyUnitsByStage[_stage];
     }
 
     function validateUnits(
         uint _stage,
         uint[5] memory _playerUnits,
         uint[5] memory _subUnits
-    ) public pure returns (bool) {
-        uint _maxUnitId;
-        if (_stage == 0) {
-            _maxUnitId = 1;
-        } else if (_stage == 1) {
-            _maxUnitId = 2;
-        } else if (_stage == 2) {
-            _maxUnitId = 3;
-        } else if (_stage == 3) {
-            _maxUnitId = 4;
-        } else if (_stage == 4) {
-            _maxUnitId = 5;
-        }
+    ) public view returns (bool) {
+        uint _maxUnitId = maxUnitIdByStage[_stage];
 
         //Check if playerUnits and subUnits within maxUnitId and not duplicate ecept for 0
         uint[10] memory _allUnits;
@@ -141,16 +178,4 @@ contract PlasmaBattleAlpha is PlasmaBattle {
     /*//////////////////////////////////////////////////////////////
                              INTERNAL VIEW
     //////////////////////////////////////////////////////////////*/
-    function _getNewUnit(uint _stage) internal pure returns (uint) {
-        if (_stage == 1) {
-            return 2;
-        } else if (_stage == 2) {
-            return 3;
-        } else if (_stage == 3) {
-            return 4;
-        } else if (_stage == 4) {
-            return 5;
-        }
-        return 0;
-    }
 }

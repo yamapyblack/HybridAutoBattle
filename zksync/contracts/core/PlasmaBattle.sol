@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 struct Battle {
     address player;
@@ -42,7 +42,7 @@ abstract contract PlasmaBattle is Ownable {
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address _signer) {
+    constructor(address _signer) Ownable(msg.sender) {
         signer = _signer;
     }
 
@@ -94,7 +94,7 @@ abstract contract PlasmaBattle is Ownable {
         ) revert PlasmaBattleErrors.BattleAlreadyEnd();
 
 
-        bytes32 digest = ECDSA.toEthSignedMessageHash(
+        bytes32 digest = MessageHashUtils.toEthSignedMessageHash(
             keccak256(abi.encodePacked(_battleId, _result))
         );
         if (!_isValidSignature(digest, _signature)) revert PlasmaBattleErrors.InvalidSignature();

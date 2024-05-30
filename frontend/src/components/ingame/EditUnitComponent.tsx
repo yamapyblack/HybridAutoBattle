@@ -1,6 +1,7 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { units } from "src/lib/data/cards";
+import { units } from "src/lib/data/units";
+import { SKILLS } from "src/lib/data/skills";
 
 const EditUnitComponent = ({
   index,
@@ -8,8 +9,9 @@ const EditUnitComponent = ({
   isSub,
   setDraggedIndex,
   setDroppedIndex,
+  handleDoubleClick,
 }) => {
-  // const { playerDispatch, subDispatch } = useContext(UnitsDispatchContext);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const handleDrop = (e) => {
     console.log("handleDrop", index);
@@ -24,18 +26,18 @@ const EditUnitComponent = ({
   const handleDragStart = (e) => {
     console.log("handleDragStart", index);
     setDraggedIndex({ index, isSub });
+    setShowTooltip(false);
   };
 
-  const handleDoubleClick = () => {
-    // playerDispatch({
-    //   type: "deleted",
-    //   index: index,
-    // });
-    // subDispatch({
-    //   type: "added",
-    //   unit: unit,
-    //   index: 0, // unused
-    // });
+  const handleMouseEnter = () => {
+    if (unit.skillIds.length > 0) {
+      setShowTooltip(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    console.log("close");
+    setShowTooltip(false);
   };
 
   if (!unitId) {
@@ -56,7 +58,7 @@ const EditUnitComponent = ({
   return (
     <>
       <div
-        className="p-2"
+        className="p-2 relative"
         style={{ backgroundImage: `url(/images/cards/card-null.png)` }}
       >
         <div
@@ -64,6 +66,8 @@ const EditUnitComponent = ({
           onDragStart={handleDragStart}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           onDoubleClick={handleDoubleClick}
         >
           <Image
@@ -93,6 +97,14 @@ const EditUnitComponent = ({
             <NumberComponent value={unit.life} />
           </div>
         </div>
+        {showTooltip && (
+          <div
+            className="absolute top-6 left-24 w-32 h-18 bg-darkgray rounded border-white border-solid border text-sm p-1"
+            style={{ fontFamily: "Inter" }}
+          >
+            <p>{SKILLS[unit.skillIds[0]].description}</p>
+          </div>
+        )}
       </div>
     </>
   );

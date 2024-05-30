@@ -2,7 +2,7 @@
 // import { kv } from "../../stores/kv";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Result } from "../../lib/interfaces/interface";
-import { readContract, writeContract } from "@wagmi/core";
+import { readContract } from "@wagmi/core";
 import { PlasmaBattleAlphaAbi } from "src/constants/plasmaBattleAlphaAbi";
 import addresses from "src/constants/addresses";
 import { createConfig, http } from "wagmi";
@@ -11,17 +11,8 @@ import BattleManager from "../../lib/classes/battleManager";
 import { type Unit } from "../../lib/interfaces/interface";
 import { ethers } from "ethers";
 import { enemyUnitsByStage } from "src/lib/data/init";
-import { units } from "src/lib/data/cards";
-import { convertUnitIds } from "src/lib/utils/Utils";
-
-const config = createConfig({
-  chains: [zkSyncSepoliaTestnet],
-  transports: {
-    [zkSyncSepoliaTestnet.id]: http(
-      zkSyncSepoliaTestnet.rpcUrls.default.http[0]
-    ),
-  },
-});
+import { units } from "src/lib/data/units";
+import { convertUnitIdsToNumber } from "src/lib/utils/Utils";
 
 export default async function handler(
   request: NextApiRequest,
@@ -30,30 +21,54 @@ export default async function handler(
   console.log("battleResultApi start");
 
   if (request.method === "GET") {
+    const chainId = request.query.chainId as string;
     const battleId = request.query.battleId as string;
     const address = request.query.address as string;
+    console.log("chainId", chainId);
     console.log("battleId", battleId);
     console.log("address", address);
+    const contractAddress = addresses(Number(chainId))!
+      .PlasmaBattleAlpha as `0x${string}`;
+    console.log("contractAddress", contractAddress);
 
-    const _resData2 = await readContract(config, {
+    let config;
+    if (Number(chainId) === zkSyncSepoliaTestnet.id) {
+      config = createConfig({
+        chains: [zkSyncSepoliaTestnet],
+        transports: {
+          [zkSyncSepoliaTestnet.id]: http(
+            zkSyncSepoliaTestnet.rpcUrls.default.http[0]
+          ),
+        },
+      });
+    } else if (Number(chainId) === scrollSepolia.id) {
+      config = createConfig({
+        chains: [scrollSepolia],
+        transports: {
+          [scrollSepolia.id]: http(scrollSepolia.rpcUrls.default.http[0]),
+        },
+      });
+    }
+
+    let _resStage = await readContract(config, {
       abi: PlasmaBattleAlphaAbi,
-      address: addresses.PlasmaBattleAlpha as `0x${string}`,
+      address: contractAddress,
       functionName: "playerStage",
       args: [address as `0x${string}`],
     });
-    console.log("_resData2", _resData2);
+    console.log("_resStage", _resStage);
 
-    const _resData = await readContract(config, {
+    const _resPlayerUnitIds = await readContract(config, {
       abi: PlasmaBattleAlphaAbi,
-      address: addresses.PlasmaBattleAlpha as `0x${string}`,
+      address: contractAddress,
       functionName: "getPlayerUnits",
       args: [address as `0x${string}`],
     });
-    console.log("_resData", _resData);
+    console.log("_resData", _resPlayerUnitIds);
 
     //BitInt to Number
-    const playerUnitIds = convertUnitIds(_resData as BigInt[]);
-    const stage = Number(_resData2);
+    const playerUnitIds = convertUnitIdsToNumber(_resPlayerUnitIds as BigInt[]);
+    const stage = Number(_resStage);
 
     //Response parameter
     let _result = 0;
