@@ -1,48 +1,109 @@
 import { useState, useEffect } from "react";
-import Image from "next/image";
-import { Scene } from "../../pages/index";
-import EditUnitComponent from "../ingame/EditUnitComponent";
-import StartBattle from "../transactions/StartBattle";
-import HeaderComponent from "../../components/ingame/HeaderComponent";
 import {
   useReadPlayerUnits,
   useReadSubUnits,
-} from "src/lib/hooks/useContractManager";
-import { convertUnitIdsToNumber } from "src/lib/utils/Utils";
-import { initPlayerIds } from "src/lib/data/init";
+  useWriteStartBattle,
+  useWriteRecoverStamina,
+  useReadWatchLatestBattleIds,
+  useReadMaxStage,
+} from "src/hooks/useContractManager";
+import EditUnitComponent from "src/components/ingame/EditUnitComponent";
+import PopupComponent from "src/components/ingame/PopupComponent";
+import ButtonComponent from "src/components/ingame/ButtonComponent";
+import TutorialComponent from "src/components/ingame/TutorialComponent";
+import CoverComponent from "src/components/ingame/CoverComponent";
+import { convertUnitIdsToNumber, parseEtherToBigint } from "src/utils/Utils";
+import { readStorage } from "src/utils/debugStorage";
+import { TUTORIAL } from "src/constants/interface";
+
+const initPlayerIds = [1, 2, 3];
 
 type DragAndDrop = {
   index: number;
   isSub: boolean;
 };
 
-const EditScenes = () => {
+interface Props {
+  tutorial: TUTORIAL;
+  clearTutorial: () => void;
+  leftStamina: number;
+  recoverStamina: () => void;
+  stage: number;
+}
+
+const EditScenes = ({
+  tutorial,
+  clearTutorial,
+  leftStamina,
+  recoverStamina,
+  stage,
+}: Props) => {
   /**============================
  * useState
  ============================*/
   //Show stage
-  const [stage, setStage] = useState(-1);
   const [isCoverVisible, setCoverVisible] = useState(true);
-  const onStageChange = async (stage: number) => {
-    console.log("stage", stage);
-    if (stage === -1) return;
-    setStage(stage);
-  };
+  //Units
+  const [playerUnitIds, setPlayerUnitIds] = useState<number[]>([]);
+  const [subUnitIds, setSubUnitIds] = useState<number[]>([]);
+
+  //battleId
+  const [latestBattleId, setLatestBattleId] = useState<BigInt>(BigInt(0));
+  const [isSentTransaction, setSentTransaction] = useState(false);
 
   //Set dragged and dropped unit for replacing
   const [draggedIndex, setDraggedIndex] = useState<DragAndDrop | null>(null);
   const [droppedIndex, setDroppedIndex] = useState<DragAndDrop | null>(null);
 
-  const [playerUnitIds, setPlayerUnitIds] = useState<number[]>([]);
-  const [subUnitIds, setSubUnitIds] = useState<number[]>([]);
+  //Stamina Popup
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [isPopupVisibleComplete, setPopupVisibleComplete] = useState(false);
 
+  /**============================
+ * useWriteContract
+ ============================*/
+  const { write: writeStart, isLoading: isLoadingStart } = useWriteStartBattle(
+    () => {},
+    () => {
+      if (process.env.NEXT_PUBLIC_DEBUG_MODE === "true") {
+        const _battleId = readStorage("battleId");
+        // Redirect to battle scene with battleId by router query in index.tsx
+        const battleId = _battleId!.toString();
+        const currentUrl = window.location.href;
+        window.location.href = `${currentUrl}?battle_id=${battleId}`;
+      }
+    },
+    playerUnitIds,
+    subUnitIds
+  );
+
+  const { write: writeStamina } = useWriteRecoverStamina(
+    () => {
+      setPopupVisible(false);
+      setPopupVisibleComplete(true);
+      recoverStamina();
+    },
+    () => {},
+    parseEtherToBigint("0.01") //value
+  );
+
+  /**============================
+* useWatchEvent
+============================*/
+  // useWatchBattleIdIncremented();
+
+  /**============================
+ * useReadContract
+ ============================*/
   const dataPlayerUnits = useReadPlayerUnits();
   const dataSubUnits = useReadSubUnits();
+  const dataLatestBattleId = useReadWatchLatestBattleIds();
+  const dataMaxStage = useReadMaxStage();
 
   /**============================
  * useEffect
  ============================*/
-  //Get player and sub units from contract
+  //Initialize player and sub units from contract
   useEffect(() => {
     if (dataPlayerUnits) {
       //If dataPlayerUnits are all 0 array, set initial members
@@ -58,19 +119,34 @@ const EditScenes = () => {
   }, [dataPlayerUnits]);
 
   useEffect(() => {
+    console.log("dataSubUnits", dataSubUnits);
     if (dataSubUnits) {
       const _subUnitIds = convertUnitIdsToNumber(dataSubUnits as BigInt[]);
       setSubUnitIds(_subUnitIds);
     }
   }, [dataSubUnits]);
 
+  //Initialize and refetch latestBattleId
+  useEffect(() => {
+    if (dataLatestBattleId) {
+      // After start tx, if the latestBattleId is different from the latestBattleId, redirect to the battle scene
+      if (isSentTransaction && dataLatestBattleId !== latestBattleId) {
+        const currentUrl = window.location.href;
+        window.location.href = `${currentUrl}?battle_id=${Number(dataLatestBattleId)}`;
+      } else if (latestBattleId === BigInt(0)) {
+        //Initialize latestBattleId, but if latestBattleId is 0, cannot getting by onchain
+        setLatestBattleId(dataLatestBattleId);
+        console.log("initialize latestBattleId", dataLatestBattleId);
+      }
+    }
+  }, [dataLatestBattleId, latestBattleId, isSentTransaction]);
+
   //Replace unit position if dragged and dropped
   useEffect(() => {
     if (draggedIndex === null || droppedIndex === null) return;
     if (draggedIndex === droppedIndex) return;
 
-    console.log("replaceUnits", draggedIndex, droppedIndex);
-
+    // console.log("replaceUnits", draggedIndex, droppedIndex);
     const _playerUnitIds = [...playerUnitIds];
     const _subUnitIds = [...subUnitIds];
 
@@ -136,6 +212,9 @@ const EditScenes = () => {
     setDroppedIndex,
   ]);
 
+  /**============================
+ * Functions
+ ============================*/
   // Function to handle double click on player unit
   const handleDoubleClick = (index: number, isSub: boolean) => {
     // If there's only one unit, do nothing
@@ -161,84 +240,108 @@ const EditScenes = () => {
  ============================*/
   return (
     <>
-      {isCoverVisible && (
-        <>
-          <div
-            className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30"
-            style={{ zIndex: 999 }}
-            onClick={() => setCoverVisible(false)}
-          >
-            <div className="text-center text-8xl">
-              {(() => {
-                if (stage === 2) return "Final Stage";
-                return `Stage ${stage + 1}`;
-              })()}
-            </div>
-          </div>
-        </>
+      {isPopupVisible && (
+        <PopupComponent
+          title={"Stamina Recovery"}
+          description={
+            "You are running low on stamina. To restore, a donation of 0.01 ETH is required."
+          }
+          clickOk={writeStamina}
+          isCancel={true}
+          clickCancel={() => setPopupVisible(false)}
+        />
       )}
-      <div className="flex flex-col items-center m-auto">
-        <HeaderComponent onStageChange={onStageChange} />
-        <main
-          className="flex flex-col"
-          style={{ width: "800px", margin: "auto" }}
-        >
-          <section className="mt-8">
+      {isPopupVisibleComplete && (
+        <PopupComponent
+          title={"Thank you for your donation!"}
+          description={""}
+          clickOk={() => {
+            console.log("popupVisibleComplete");
+            setPopupVisibleComplete(false);
+          }}
+          isCancel={false}
+          clickCancel={() => {}}
+        />
+      )}
+
+      <TutorialComponent
+        isTutorial={!isCoverVisible}
+        tutorial={tutorial}
+        onComplete={() => {
+          clearTutorial();
+        }}
+      />
+      <CoverComponent
+        isCoverVisible={isCoverVisible}
+        onClick={() => setCoverVisible(false)}
+        text={
+          stage === Number(dataMaxStage) ? "Final Stage" : `Stage ${stage + 1}`
+        }
+      />
+      <div className="flex flex-col items-center">
+        <main className="flex flex-col" style={{ width: "1080px" }}>
+          <section className="mt-24 mx-auto">
+            <div className="flex justify-center text-lg font-bold">
+              Starting units
+            </div>
             <div
-              className="flex justify-end p-4 mx-auto bg-darkgray"
-              style={{ width: "640px" }}
+              className="flex flex-row-reverse mt-4"
+              style={{ width: "640px", height: "144px" }}
             >
-              <div
-                className="mx-auto p-2 flex flex-row-reverse"
-                style={{ height: 132 }}
-              >
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div className="mx-4" key={index}>
-                    <EditUnitComponent
-                      index={index}
-                      unitId={playerUnitIds[index]}
-                      isSub={false}
-                      setDraggedIndex={setDraggedIndex}
-                      setDroppedIndex={setDroppedIndex}
-                      handleDoubleClick={() => {
-                        handleDoubleClick(index, false);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div className="mx-2 bg-darkgray rounded-md" key={index}>
+                  <EditUnitComponent
+                    index={index}
+                    unitId={playerUnitIds[index]}
+                    isSub={false}
+                    setDraggedIndex={setDraggedIndex}
+                    setDroppedIndex={setDroppedIndex}
+                    handleDoubleClick={() => {
+                      handleDoubleClick(index, false);
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           </section>
-          <section className="mt-8">
-            <div className="flex justify-end p-4">
-              <div
-                className="mx-20 p-2 flex flex-row-reverse"
-                style={{ height: 132 }}
-              >
-                {subUnitIds.map((_unitId, index) => (
-                  <div className="mx-4" key={index}>
-                    <EditUnitComponent
-                      index={index}
-                      unitId={_unitId}
-                      isSub={true}
-                      setDraggedIndex={setDraggedIndex}
-                      setDroppedIndex={setDroppedIndex}
-                      handleDoubleClick={() => {
-                        handleDoubleClick(index, true);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+          <section className="mt-16 mx-auto">
+            <div className="flex justify-center text-lg font-bold">
+              Reserve units
+            </div>
+            <div
+              className="flex flex-row-reverse mt-4 justify-center bg-darkgray rounded-md"
+              style={{ width: "628px", height: "144px" }}
+            >
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div className="mx-2" key={index}>
+                  <EditUnitComponent
+                    index={index}
+                    unitId={subUnitIds[index]}
+                    isSub={true}
+                    setDraggedIndex={setDraggedIndex}
+                    setDroppedIndex={setDroppedIndex}
+                    handleDoubleClick={() => {
+                      handleDoubleClick(index, true);
+                    }}
+                  />
+                </div>
+              ))}
             </div>
           </section>
-          <section className="mt-8">
+          <section className="mt-16">
             <div className="text-center">
-              <StartBattle
-                playerUnitIds={playerUnitIds}
-                subUnitIds={subUnitIds}
-                onSuccess={() => {}}
-                onComplete={() => {}}
+              <ButtonComponent
+                write={() => {
+                  if (leftStamina < 1) {
+                    setPopupVisible(true);
+                    return;
+                  }
+                  if (isLoadingStart) return;
+                  setSentTransaction(true);
+                  writeStart();
+                }}
+                isLoading={isLoadingStart} //once transaction is sent, isLoading is true
+                text={"START"}
               />
             </div>
           </section>

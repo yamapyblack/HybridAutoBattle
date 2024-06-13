@@ -1,4 +1,4 @@
-import { type Unit } from "../interfaces/interface";
+import { type Unit } from "src/constants/interface";
 export const units: { [key: number]: Unit } = {
   88: {
     id: 1,
@@ -54,6 +54,33 @@ export const units: { [key: number]: Unit } = {
     description: "",
     skillIds: [12],
   },
+  6: {
+    id: 6,
+    name: "Ant6",
+    imagePath: "1006",
+    life: 9,
+    attack: 3,
+    description: "",
+    skillIds: [],
+  },
+  7: {
+    id: 7,
+    name: "Ant7",
+    imagePath: "1007",
+    life: 2,
+    attack: 8,
+    description: "",
+    skillIds: [],
+  },
+  8: {
+    id: 8,
+    name: "Ant8",
+    imagePath: "1008",
+    life: 6,
+    attack: 6,
+    description: "",
+    skillIds: [],
+  },
   8001: {
     id: 8001,
     name: "Ant1",
@@ -98,5 +125,14 @@ export const units: { [key: number]: Unit } = {
     attack: 5,
     description: "",
     skillIds: [15],
+  },
+  8006: {
+    id: 8006,
+    name: "Ant1",
+    imagePath: "8006",
+    life: 4,
+    attack: 4,
+    description: "",
+    skillIds: [8],
   },
 };

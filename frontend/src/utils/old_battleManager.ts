@@ -1,12 +1,11 @@
 import {
-  Result,
+  RESULT,
   SKILL_TIMING,
   SKILL_EFFECT,
   SKILL_TARGET,
-  Skill,
-} from "src/lib/interfaces/interface";
-import { SKILLS } from "src/lib/data/skills";
-import Unit, { IUnit } from "./unitClass";
+} from "src/constants/interface";
+import { SKILLS } from "src/constants/skills";
+import Unit, { IUnit } from "./old_unitClass";
 
 /**============================
  * Constants
@@ -81,14 +80,14 @@ export default class BattleManager {
     //If no member, game over
     if (this.playerMembers.length === 0 || this.enemyMembers.length === 0) {
       if (this.playerMembers.length > 0) {
-        return Result.WIN;
+        return RESULT.WIN;
       } else if (this.enemyMembers.length > 0) {
-        return Result.LOSE;
+        return RESULT.LOSE;
       } else {
-        return Result.DRAW;
+        return RESULT.DRAW;
       }
     }
-    return Result.NOT_YET;
+    return RESULT.NOT_YET;
   }
 
   /**============================

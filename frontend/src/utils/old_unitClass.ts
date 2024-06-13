@@ -1,4 +1,4 @@
-import { Unit } from "../interfaces/interface";
+import { Unit } from "src/constants/interface";
 
 export interface IUnit {
   id: number;

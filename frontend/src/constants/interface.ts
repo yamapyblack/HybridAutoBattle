@@ -18,11 +18,23 @@ export enum SKILL_TARGET {
   Behind,
 }
 
-export enum Result {
+export enum SCENE {
+  Edit,
+  Battle,
+  Over,
+}
+
+export enum RESULT {
   NOT_YET,
   WIN,
   LOSE,
   DRAW,
+}
+
+export enum TUTORIAL {
+  None,
+  MoveSubUnit,
+  ReverseUnit,
 }
 
 export type Unit = {
@@ -35,11 +47,23 @@ export type Unit = {
   skillIds: number[];
 };
 
+export const unitVariableDefaultValues = {
+  isAnimateAction: false,
+  isAnimateBuffAttack: 0,
+  isAnimateBuffLife: 0,
+  isAnimateDebuffAttack: 0,
+  isAnimateDebuffLife: 0,
+  isAnimateAttacking: false,
+};
+
 export type UnitVariable = {
   life: number;
   attack: number;
-  isAnimateChangeLife: boolean;
-  isAnimateChangeAttack: boolean;
+  isAnimateAction: boolean;
+  isAnimateBuffLife: number;
+  isAnimateBuffAttack: number;
+  isAnimateDebuffLife: number;
+  isAnimateDebuffAttack: number;
   isAnimateAttacking: boolean;
 };
 

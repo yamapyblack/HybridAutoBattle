@@ -1,20 +1,23 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Scene } from "../../pages/index";
-import BattleUnitComponent from "../../components/ingame/BattleUnitComponent";
-import HeaderComponent from "../../components/ingame/HeaderComponent";
+import BattleUnitComponent from "src/components/ingame/BattleUnitComponent";
+import CoverComponent from "src/components/ingame/CoverComponent";
 import {
-  Result,
-  Skill,
+  type Unit,
+  type UnitVariable,
+  unitVariableDefaultValues,
+  RESULT,
   SKILL_TIMING,
-  SKILL_EFFECT,
-  SKILL_TARGET,
-} from "src/lib/interfaces/interface";
-import { SKILLS } from "src/lib/data/skills";
-import { units } from "src/lib/data/units";
-import { type Unit, type UnitVariable } from "src/lib/interfaces/interface";
-import { enemyUnitsByStage } from "src/lib/data/init";
-import { useReadPlayerUnits } from "src/lib/hooks/useContractManager";
+  SCENE,
+} from "src/constants/interface";
+import { SKILLS } from "src/constants/skills";
+import { units } from "src/constants/units";
+import {
+  useReadPlayerUnits,
+  useReadRandomSeeds,
+  useReadGetEnemyUnits,
+} from "src/hooks/useContractManager";
+import BattleClass from "src/utils/BattleClass";
 
 enum PHASE {
   BEFORE_BATTLE,
@@ -22,155 +25,12 @@ enum PHASE {
   ATTACKING,
 }
 
-const damageLife = (unitVals: UnitVariable[], index: number, value: number) => {
-  const _unitVariable = unitVals[index];
-  _unitVariable.life -= value;
-  if (_unitVariable.life < 0) _unitVariable.life = 0;
-  _unitVariable.isAnimateChangeLife = true;
-  console.log("damageLife end");
-};
-
-const buffLife = (unitVals: UnitVariable[], index: number, value: number) => {
-  const _unitVariable = unitVals[index];
-  _unitVariable.life += value;
-  _unitVariable.isAnimateChangeLife = true;
-  console.log("buffLife end");
-};
-
-const buffAttack = (unitVals: UnitVariable[], index: number, value: number) => {
-  const _unitVariable = unitVals[index];
-  _unitVariable.attack += value;
-  _unitVariable.isAnimateChangeAttack = true;
-  console.log("buffAttack end");
-};
-
-const _executeSkill = async (
-  _playerVals: UnitVariable[],
-  _enemyVals: UnitVariable[],
-  _fromUnitIdx: number,
-  _isFromPlayer: boolean,
-  _skill: Skill
-): Promise<void> => {
-  console.log("executeSkill");
-
-  const [_isToPlayer, _unitIndexes, _values] = _getSkillTarget(
-    _playerVals,
-    _enemyVals,
-    _fromUnitIdx,
-    _isFromPlayer,
-    _skill.target,
-    _skill.value
-  );
-  console.log(_unitIndexes, _values);
-
-  await _emitSkill(
-    _playerVals,
-    _enemyVals,
-    _isToPlayer,
-    _unitIndexes,
-    _values,
-    _skill.effect
-  );
-};
-
-const _getSkillTarget = (
-  _playerVals: UnitVariable[],
-  _enemyVals: UnitVariable[],
-  _fromUnitIdx: number,
-  _isFromPlayer: boolean,
-  _skillTarget: SKILL_TARGET,
-  _skillValue: number
-): [boolean, number[], number[]] => {
-  let _isToPlayer: boolean = false;
-  let _unitIndexes: number[] = [];
-  let _values: number[] = [];
-
-  switch (_skillTarget) {
-    case SKILL_TARGET.InFrontOf:
-      console.log("InFrontOf");
-      if (_isFromPlayer) {
-        _isToPlayer = true;
-        if (_fromUnitIdx > 0) {
-          _unitIndexes = [_fromUnitIdx - 1];
-          _values = [_skillValue];
-        } else {
-          _unitIndexes = [];
-          _values = [];
-        }
-      } else {
-        _isToPlayer = false;
-        if (_fromUnitIdx > 0) {
-          _unitIndexes = [_fromUnitIdx - 1];
-          _values = [_skillValue];
-        } else {
-          _unitIndexes = [];
-          _values = [];
-        }
-      }
-      break;
-
-    case SKILL_TARGET.Behind:
-      console.log("Behind");
-      if (_isFromPlayer) {
-        _isToPlayer = true;
-        _unitIndexes =
-          _fromUnitIdx < _playerVals.length - 1 ? [_fromUnitIdx + 1] : [];
-      } else {
-        _isToPlayer = false;
-        _unitIndexes =
-          _fromUnitIdx < _enemyVals.length - 1 ? [_fromUnitIdx + 1] : [];
-      }
-      _values = [_skillValue];
-      break;
-
-    default:
-      //TODO error handling
-      console.error("Invalid skill target");
-  }
-  return [_isToPlayer, _unitIndexes, _values];
-};
-
-const _emitSkill = async (
-  _playerVals: UnitVariable[],
-  _enemyVals: UnitVariable[],
-  isToPlayer: boolean,
-  unitIndexes: number[],
-  values: number[],
-  skillEffect: SKILL_EFFECT
-): Promise<void> => {
-  if (unitIndexes.length !== values.length) {
-    console.error("emitSkillEffect: Index and value length are not same");
-    return;
-  }
-
-  for (let i = 0; i < unitIndexes.length; i++) {
-    const _unitVals = isToPlayer ? _playerVals : _enemyVals;
-    switch (skillEffect) {
-      case SKILL_EFFECT.BuffAttack:
-        await buffAttack(_unitVals, unitIndexes[i], values[i]);
-        break;
-      case SKILL_EFFECT.BuffHealth:
-        await buffLife(_unitVals, unitIndexes[i], values[i]);
-        break;
-      case SKILL_EFFECT.Damage:
-        await damageLife(_unitVals, unitIndexes[i], values[i]);
-        break;
-      case SKILL_EFFECT.DebuffAttack:
-        // await _unit.debuffAttack(values[i]);
-        break;
-      default:
-        console.error("Invalid skill effect");
-    }
-  }
-};
-
-const BattleScenes = ({ setScene, setResult }) => {
+const BattleScenes = ({ setScene, setResult, battleId, stage }) => {
   /**============================
  * useState
  ============================*/
-  const [stage, setStage] = useState(0);
   const [phase, setPhase] = useState(PHASE.BEFORE_BATTLE);
-  const [isCoverVisible, setCoverVisible] = useState(true); // New state variable
+  const [isCoverVisible, setCoverVisible] = useState(true);
   const [playerUnits, setPlayerUnits] = useState<Unit[]>([]);
   const [playerUnitsVariable, setPlayerUnitsVariable] = useState<
     UnitVariable[]
@@ -179,15 +39,27 @@ const BattleScenes = ({ setScene, setResult }) => {
   const [enemyUnitsVariable, setEnemyUnitsVariable] = useState<UnitVariable[]>(
     []
   );
+  const [battleClass, setBattleClass] = useState<BattleClass | null>(null);
 
   /**============================
  * useReadContract
  ============================*/
   const dataPlayerUnits = useReadPlayerUnits();
+  console.log("stage", stage);
+  const dataReadEnemyUnitsByStage = useReadGetEnemyUnits(stage);
+  const randomSeed = useReadRandomSeeds(battleId);
+  console.log("dataReadEnemyUnitsByStage", dataReadEnemyUnitsByStage);
 
   /**============================
  * useEffect
  ============================*/
+  //New BattleClass instance
+  useEffect(() => {
+    if (randomSeed) {
+      setBattleClass(new BattleClass(battleId, randomSeed));
+    }
+  }, [randomSeed, battleId]);
+
   //Set player units by contract data
   useEffect(() => {
     if (dataPlayerUnits) {
@@ -203,9 +75,7 @@ const BattleScenes = ({ setScene, setResult }) => {
           return {
             life: unit.life,
             attack: unit.attack,
-            isAnimateAttacking: false,
-            isAnimateChangeAttack: false,
-            isAnimateChangeLife: false,
+            ...unitVariableDefaultValues,
           };
         }
       );
@@ -215,24 +85,26 @@ const BattleScenes = ({ setScene, setResult }) => {
 
   //Set enemy units by stage
   useEffect(() => {
-    if (stage >= 0) {
-      console.log("stage", stage);
-      setEnemyUnits(enemyUnitsByStage[stage].map((id) => units[id]));
-      setEnemyUnitsVariable(
-        enemyUnitsByStage[stage]
-          .map((id) => units[id])
-          .map((unit: Unit) => {
-            return {
-              life: unit.life,
-              attack: unit.attack,
-              isAnimateAttacking: false,
-              isAnimateChangeAttack: false,
-              isAnimateChangeLife: false,
-            };
-          })
+    if (stage >= 0 && dataReadEnemyUnitsByStage) {
+      const _enemyUnits: Unit[] = [];
+      for (const id of dataReadEnemyUnitsByStage as []) {
+        if (Number(id) === 0) continue;
+        _enemyUnits.push(units[Number(id)]);
+      }
+      setEnemyUnits(_enemyUnits);
+
+      const _enemyUnitsVariable: UnitVariable[] = _enemyUnits.map(
+        (unit: Unit) => {
+          return {
+            life: unit.life,
+            attack: unit.attack,
+            ...unitVariableDefaultValues,
+          };
+        }
       );
+      setEnemyUnitsVariable(_enemyUnitsVariable);
     }
-  }, [stage]);
+  }, [stage, dataReadEnemyUnitsByStage]);
 
   //Judge if player or enemy is dead
   useEffect(() => {
@@ -243,13 +115,13 @@ const BattleScenes = ({ setScene, setResult }) => {
           playerUnitsVariable.length === 0 &&
           enemyUnitsVariable.length === 0
         ) {
-          setResult(Result.DRAW);
+          setResult(RESULT.DRAW);
         } else if (playerUnitsVariable.length === 0) {
-          setResult(Result.LOSE);
+          setResult(RESULT.LOSE);
         } else if (enemyUnitsVariable.length === 0) {
-          setResult(Result.WIN);
+          setResult(RESULT.WIN);
         }
-        setScene(Scene.Over);
+        setScene(SCENE.Over);
       }
     };
     judge();
@@ -258,7 +130,7 @@ const BattleScenes = ({ setScene, setResult }) => {
   /**============================
  * Logic
  ============================*/
-  const judgeUnitKilled = (isPlayer: boolean, index: number) => {
+  const removeKilledUnit = (isPlayer: boolean, index: number) => {
     const unitsVariable = isPlayer ? playerUnitsVariable : enemyUnitsVariable;
     //Judge if life is 0
     if (unitsVariable[index].life === 0) {
@@ -284,6 +156,7 @@ const BattleScenes = ({ setScene, setResult }) => {
    */
   const startOfBattle = async () => {
     setCoverVisible(false);
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     for (let i = 0; i < 5; i++) {
       if (playerUnits[i]) {
@@ -291,11 +164,11 @@ const BattleScenes = ({ setScene, setResult }) => {
           const _skill = SKILLS[playerUnits[i].skillIds[j]];
           if (_skill.timing === SKILL_TIMING.StartOfBattle) {
             console.log("executeSkill", i, true);
-            playerUnitsVariable[i].isAnimateAttacking = true;
+            playerUnitsVariable[i].isAnimateAction = true;
             setPlayerUnitsVariable([...playerUnitsVariable]);
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            await _executeSkill(
+            await battleClass!.executeSkill(
               playerUnitsVariable,
               enemyUnitsVariable,
               i,
@@ -304,6 +177,7 @@ const BattleScenes = ({ setScene, setResult }) => {
             );
             setPlayerUnitsVariable([...playerUnitsVariable]); //reflesh
             setEnemyUnitsVariable([...enemyUnitsVariable]);
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }
       }
@@ -312,11 +186,11 @@ const BattleScenes = ({ setScene, setResult }) => {
           const _skill = SKILLS[enemyUnits[i].skillIds[j]];
           if (_skill.timing === SKILL_TIMING.StartOfBattle) {
             console.log("executeSkill", i, false);
-            enemyUnitsVariable[i].isAnimateAttacking = true;
+            enemyUnitsVariable[i].isAnimateAction = true;
             setEnemyUnitsVariable([...enemyUnitsVariable]);
             await new Promise((resolve) => setTimeout(resolve, 500));
 
-            await _executeSkill(
+            await battleClass!.executeSkill(
               playerUnitsVariable,
               enemyUnitsVariable,
               i,
@@ -325,6 +199,7 @@ const BattleScenes = ({ setScene, setResult }) => {
             );
             setPlayerUnitsVariable([...playerUnitsVariable]); //reflesh
             setEnemyUnitsVariable([...enemyUnitsVariable]);
+            await new Promise((resolve) => setTimeout(resolve, 500));
           }
         }
       }
@@ -346,21 +221,30 @@ const BattleScenes = ({ setScene, setResult }) => {
       enemyUnitsVariable[0].isAnimateAttacking = true;
       setPlayerUnitsVariable([...playerUnitsVariable]);
       setEnemyUnitsVariable([...enemyUnitsVariable]);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // sleep;
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       //damage
       console.log("damage");
-      damageLife(playerUnitsVariable, 0, enemyUnitsVariable[0].attack);
-      damageLife(enemyUnitsVariable, 0, playerUnitsVariable[0].attack);
+      battleClass!.damageLife(
+        playerUnitsVariable,
+        0,
+        enemyUnitsVariable[0].attack
+      );
+      battleClass!.damageLife(
+        enemyUnitsVariable,
+        0,
+        playerUnitsVariable[0].attack
+      );
       setPlayerUnitsVariable([...playerUnitsVariable]); //refresh
       setEnemyUnitsVariable([...enemyUnitsVariable]); //refresh
 
       // sleep;
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
       //Judge if life is 0
-      judgeUnitKilled(true, 0);
-      judgeUnitKilled(false, 0);
+      removeKilledUnit(true, 0);
+      removeKilledUnit(false, 0);
 
       //Back to beforeAttack
       setPhase(PHASE.BEFORE_ATTACK);
@@ -370,14 +254,17 @@ const BattleScenes = ({ setScene, setResult }) => {
   /**============================
  * Rendering
  ============================*/
+  //TODO
+  if (battleClass === null) return <div>Loading...</div>;
+
   const UnitSection = ({ units, unitsVariable, isPlayer }) => (
-    <section className="" style={{ width: "520px" }}>
+    <section className="" style={{ width: "600px" }}>
       <div
         className="p-2 flex"
-        style={{ height: 132, flexDirection: isPlayer ? "row-reverse" : "row" }}
+        style={{ flexDirection: isPlayer ? "row-reverse" : "row" }}
       >
         {units.map((unit, index) => (
-          <div className="my-4 mx-2" key={index}>
+          <div className="mx-1" key={index}>
             <BattleUnitComponent
               index={index}
               unit={unit}
@@ -392,21 +279,14 @@ const BattleScenes = ({ setScene, setResult }) => {
   return (
     <>
       <div className="flex flex-col items-center m-auto">
-        {isCoverVisible && (
-          <>
-            <div
-              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30"
-              style={{ zIndex: 999 }}
-              onClick={startOfBattle}
-            >
-              <div className="text-center text-8xl">START</div>
-            </div>
-          </>
-        )}
-        <HeaderComponent onStageChange={setStage} />
-        <main style={{ width: "1080px", margin: "auto" }}>
+        <CoverComponent
+          isCoverVisible={isCoverVisible}
+          onClick={startOfBattle}
+          text={"START"}
+        />
+        <main style={{ width: "1280px" }}>
           <div className="flex flex-col">
-            <div className="mt-96 mx-auto flex justify-center">
+            <section className="mt-48 mx-auto flex justify-center">
               <UnitSection
                 units={playerUnits}
                 unitsVariable={playerUnitsVariable}
@@ -417,11 +297,11 @@ const BattleScenes = ({ setScene, setResult }) => {
                 unitsVariable={enemyUnitsVariable}
                 isPlayer={false}
               />
-            </div>
-            <section className="mt-8 mb-8">
+            </section>
+            <section className="mt-16 mb-8">
               <div className="text-center">
                 <button
-                  className="bg-sub font-bold pl-14 pr-12 py-1 rounded-md text-decoration-none"
+                  className="bg-btn font-bold pl-14 pr-12 py-1 rounded-md text-decoration-none hover:opacity-90"
                   onClick={() => {
                     goNextAction();
                   }}
@@ -430,7 +310,7 @@ const BattleScenes = ({ setScene, setResult }) => {
                     src="/images/common/resume.png"
                     alt=""
                     width={24}
-                    height={16}
+                    height={24}
                   />
                 </button>
               </div>

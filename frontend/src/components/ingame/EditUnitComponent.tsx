@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { units } from "src/lib/data/units";
-import { SKILLS } from "src/lib/data/skills";
+import { units } from "src/constants/units";
+import { SKILLS } from "src/constants/skills";
 
 const EditUnitComponent = ({
   index,
@@ -30,7 +30,7 @@ const EditUnitComponent = ({
   };
 
   const handleMouseEnter = () => {
-    if (unit.skillIds.length > 0) {
+    if (units[unitId].skillIds.length > 0) {
       setShowTooltip(true);
     }
   };
@@ -40,69 +40,82 @@ const EditUnitComponent = ({
     setShowTooltip(false);
   };
 
-  if (!unitId) {
-    return (
-      <div onDrop={handleDrop} onDragOver={handleDragOver}>
-        <Image
-          src={"/images/cards/card-null.png"}
-          alt=""
-          width={88}
-          height={16}
-        />
-      </div>
-    );
-  }
-
-  const unit = units[unitId];
-
   return (
     <>
-      <div
-        className="p-2 relative"
-        style={{ backgroundImage: `url(/images/cards/card-null.png)` }}
-      >
-        <div
-          draggable
-          onDragStart={handleDragStart}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onDoubleClick={handleDoubleClick}
-        >
-          <Image
-            src={`/images/cards/${unit.imagePath}.png`}
-            alt=""
-            width={72}
-            height={16}
-          />
-        </div>
-        <div className="flex justify-between">
-          <div className="w-8 relative">
-            <Image
-              src="/images/common/attack.png"
-              alt=""
-              width={28}
-              height={28}
-            />
-            <NumberComponent value={unit.attack} />
-          </div>
-          <div className="w-8 relative">
-            <Image
-              src="/images/common/life.png"
-              alt=""
-              width={28}
-              height={28}
-            />
-            <NumberComponent value={unit.life} />
-          </div>
-        </div>
+      <div className="p-2 relative">
+        {!unitId ? (
+          <>
+            {isSub ? (
+              <div
+                style={{
+                  width: "96px",
+                  height: "128px",
+                }}
+              ></div>
+            ) : (
+              <div
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                style={{
+                  width: "96px",
+                  height: "128px",
+                }}
+              ></div>
+            )}
+          </>
+        ) : (
+          <>
+            <div
+              draggable
+              onDragStart={handleDragStart}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              onDoubleClick={() => {
+                setShowTooltip(false);
+                handleDoubleClick();
+              }}
+            >
+              <Image
+                src={`/images/cards/${units[unitId].imagePath}.png`}
+                alt=""
+                width={96}
+                height={96}
+              />
+            </div>
+            <div className="flex justify-between">
+              <div className="w-8 relative">
+                <Image
+                  src="/images/common/attack.png"
+                  alt=""
+                  width={32}
+                  height={32}
+                />
+                <div className="absolute inset-0 flex items-center justify-center font-bold text-xl">
+                  {units[unitId].attack}
+                </div>
+              </div>
+              <div className="w-8 relative">
+                <Image
+                  src="/images/common/life.png"
+                  alt=""
+                  width={32}
+                  height={32}
+                />
+                <div className="absolute inset-0 flex items-center justify-center font-bold text-xl">
+                  {units[unitId].life}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
         {showTooltip && (
           <div
             className="absolute top-6 left-24 w-32 h-18 bg-darkgray rounded border-white border-solid border text-sm p-1"
             style={{ fontFamily: "Inter" }}
           >
-            <p>{SKILLS[unit.skillIds[0]].description}</p>
+            <p>{SKILLS[units[unitId].skillIds[0]].description}</p>
           </div>
         )}
       </div>
@@ -110,25 +123,20 @@ const EditUnitComponent = ({
   );
 };
 
-const NumberComponent = ({ value }) => {
-  const cellWidth = 24;
-  return (
-    <div
-      style={{
-        position: "absolute",
-        left: 2,
-        top: 3,
-        width: cellWidth,
-      }}
-    >
-      <Image
-        src={`/images/common/numbers/${value}.png`}
-        alt=""
-        width={100}
-        height={100}
-      />
-    </div>
-  );
-};
+// const NumberComponent = ({ value }) => {
+//   const cellWidth = 30;
+//   return (
+//     <div
+//       style={{
+//         position: "absolute",
+//         left: 2,
+//         top: 3,
+//         width: cellWidth,
+//       }}
+//     >
+//       {value}
+//     </div>
+//   );
+// };
 
 export default EditUnitComponent;

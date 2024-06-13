@@ -3,13 +3,13 @@ import {
   SKILL_EFFECT,
   SKILL_TARGET,
   SKILL_TIMING,
-} from "../interfaces/interface";
+} from "src/constants/interface";
 
 export const SKILLS: { [key: number]: Skill } = {
   1: {
     id: 1,
     name: "StartBHealthRandP1",
-    description: "On battle start,\nbuff health of a random player by 1.",
+    description: "On battle start,\nbuff life of a random player by 1.",
     timing: SKILL_TIMING.StartOfBattle,
     effect: SKILL_EFFECT.BuffHealth,
     target: SKILL_TARGET.RandomPlayer,
@@ -18,7 +18,7 @@ export const SKILLS: { [key: number]: Skill } = {
   2: {
     id: 2,
     name: "StartBAttackRandP1",
-    description: "",
+    description: "On battle start,\nbuff attack of a random player by 1.",
     timing: SKILL_TIMING.StartOfBattle,
     effect: SKILL_EFFECT.BuffAttack,
     target: SKILL_TARGET.RandomPlayer,
@@ -27,7 +27,7 @@ export const SKILLS: { [key: number]: Skill } = {
   3: {
     id: 3,
     name: "StartBHealthRandP2",
-    description: "",
+    description: "On battle start,\nbuff life of a random player by 2.",
     timing: SKILL_TIMING.StartOfBattle,
     effect: SKILL_EFFECT.BuffHealth,
     target: SKILL_TARGET.RandomPlayer,

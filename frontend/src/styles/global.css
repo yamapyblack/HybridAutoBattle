@@ -8,8 +8,14 @@
 
 @layer base {
   html {
-    background-color: #2c2c2c;
+    background-color: #000000;
     /* font-family: "Alkatra", cursive; */
     color: white;
+    font-family: "Inter";
+    /* background-image: url(/images/common/manhattan.png);
+    background-size: "cover";
+    background-position: "center";
+    background-color: "rgba(255, 255, 255, 0.1)";
+    height: "100vh"; */
   }
 }
