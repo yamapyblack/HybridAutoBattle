@@ -11,6 +11,9 @@ interface IERC721Alpha {
 
 contract PlasmaBattleAlpha is PlasmaBattle {
     error InvalidUnitId();
+    error StaminaNotEnough();
+    error StaminaRecoveryPaymentInvalid();
+    error StaminaRecoveryAlreadyFull();
     /*//////////////////////////////////////////////////////////////
                                 CONSTANTS
     //////////////////////////////////////////////////////////////*/
@@ -29,9 +32,15 @@ contract PlasmaBattleAlpha is PlasmaBattle {
     mapping(uint => uint) public newUnitByStage;
     mapping(uint => uint[5]) public enemyUnitsByStage;
     mapping(uint => uint) public maxUnitIdByStage;
-    //TODO will be changed
-    uint public maxStage = 2;
-    address nftAddress;
+    //Stamina Mapping(playerAddress => stamina)
+    mapping(address => uint8) public staminas;
+    uint8 public maxStamina = 6;
+    uint public starminaRecoveryCost = 0.01 ether;
+
+    //For completing the game
+    address public nftAddress;
+
+    uint public maxStage = 3;
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -40,10 +49,12 @@ contract PlasmaBattleAlpha is PlasmaBattle {
         //Set newUnitsByStage
         newUnitByStage[1] = 4;
         newUnitByStage[2] = 5;
+        newUnitByStage[3] = 6;
         //Set enemyUnitsByStage
         enemyUnitsByStage[0] = [8001, 8002, 8003];
         enemyUnitsByStage[1] = [8002, 8002, 8003, 8003];
         enemyUnitsByStage[2] = [8004, 8005, 8004];
+        enemyUnitsByStage[3] = [8006, 8006, 8004, 8005, 8004];
         //Set maxUnitIdByStage
         // maxUnitIdByStage[0] = 1;
         // maxUnitIdByStage[1] = 2;
@@ -74,17 +85,40 @@ contract PlasmaBattleAlpha is PlasmaBattle {
         maxUnitIdByStage[_stage] = _maxUnitId;
     }
 
+    function setMaxStamina(uint8 _maxStamina) external onlyOwner {
+        maxStamina = _maxStamina;
+    }
+
+    function setStaminaRecoveryCost(
+        uint _starminaRecoveryCost
+    ) external onlyOwner {
+        starminaRecoveryCost = _starminaRecoveryCost;
+    }
+
+    function setMaxStage(uint _maxStage) external onlyOwner {
+        maxStage = _maxStage;
+    }
+
     function setNftAddress(address _nftAddress) external onlyOwner {
         nftAddress = _nftAddress;
+    }
+
+    function withdraw() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
     }
 
     /*//////////////////////////////////////////////////////////////
                             EXTERNAL UPDATE
     //////////////////////////////////////////////////////////////*/
+
     function startBattle(
         uint[5] memory _playerUnits,
         uint[5] memory _subUnits
     ) external returns (uint) {
+        if (staminas[msg.sender] >= maxStamina) {
+            revert StaminaNotEnough();
+        }
+        staminas[msg.sender]++;
         //TODO revisit this
         // if (!validateUnits(playerStage[msg.sender], _playerUnits, _subUnits)) {
         //     revert InvalidUnitId();
@@ -121,6 +155,15 @@ contract PlasmaBattleAlpha is PlasmaBattle {
                 }
             }
         }
+    }
+
+    function recoverStamina() external payable {
+        if (staminas[msg.sender] == 0) revert StaminaRecoveryAlreadyFull();
+        //to recover, pay ETH
+        if (msg.value != starminaRecoveryCost)
+            revert StaminaRecoveryPaymentInvalid();
+
+        staminas[msg.sender] = 0;
     }
 
     /*//////////////////////////////////////////////////////////////

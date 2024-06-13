@@ -7,7 +7,7 @@ import {
 
 const _addresses: { [chainId: number]: { [key: string]: string } } = {
   [zkSyncSepoliaTestnet.id]: {
-    PlasmaBattleAlpha: "0x3979d863D02Ce04fc5B8932537b9f69c402B2911",
+    PlasmaBattleAlpha: "0xD1a7fa9ea17E71fB458B0a3C74Fa445736ea6cb0",
   },
   [scrollSepolia.id]: {
     PlasmaBattleAlpha: "0xBafC090B1f514792Ab15336c0bc180f230415bF1",

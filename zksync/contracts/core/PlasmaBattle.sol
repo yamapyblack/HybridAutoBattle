@@ -4,12 +4,19 @@ pragma solidity 0.8.23;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+// import {console2} from "forge-std/console2.sol";
 
 struct Battle {
     address player;
     Result result;
     uint256 startTimestamp;
     uint256 endTimestamp;
+}
+
+struct RandomSeed {
+    uint prevBlockNumber;
+    uint timestamp;
+    address txOrigin;
 }
 
 enum Result {
@@ -28,6 +35,7 @@ library PlasmaBattleErrors {
 
 event BattleIdIncremented(uint battleId);
 event BattleRecorded(uint indexed battleId, address indexed player, Result indexed result, uint startTimestamp, uint endTimestamp);
+event RandomSeedRecorded(uint indexed battleId, uint prevBlockNumber, uint timestamp, address txOrigin);
 
 abstract contract PlasmaBattle is Ownable {
 
@@ -38,6 +46,10 @@ abstract contract PlasmaBattle is Ownable {
     address public signer;
     // mapping(battlId => info)
     mapping(uint => Battle) public battleRecord;
+    // mapping(battleId => randomSeed)
+    mapping(uint => RandomSeed) public randomSeeds;
+    // mapping(address => latestBattleId)
+    mapping(address => uint) public latestBattleIds;
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -61,21 +73,56 @@ abstract contract PlasmaBattle is Ownable {
                              EXTERNAL VIEW
     //////////////////////////////////////////////////////////////*/
 
+    function getRandomNumber(uint _battleId, uint8 _index) public view returns (uint256) {
+        RandomSeed memory randomSeed = randomSeeds[_battleId];
+        return uint256(keccak256(abi.encodePacked(_battleId, randomSeed.prevBlockNumber, randomSeed.timestamp, randomSeed.txOrigin, _index)));
+    }
+
+    function getRandomNumbers(uint _battleId, uint8 _index, uint8 _i) public view returns (uint256[] memory) {
+        RandomSeed memory randomSeed = randomSeeds[_battleId];
+        uint256[] memory randomNumbers_ = new uint256[](_i);
+        for (uint8 i = 0; i < _i; ) {
+            randomNumbers_[i] = uint256(
+                keccak256(
+                    abi.encodePacked(
+                        _battleId,
+                        randomSeed.prevBlockNumber,
+                        randomSeed.timestamp,
+                        randomSeed.txOrigin,
+                        _index + i
+                    )
+                )
+            );
+            unchecked {
+                i++;
+            }
+        }
+        return randomNumbers_;
+    }
+
     /*//////////////////////////////////////////////////////////////
                             INTERNAL UPDATE
     //////////////////////////////////////////////////////////////*/
-    function _startBattle() internal virtual returns (uint) {
-        battleId++;
-        emit BattleIdIncremented(battleId);
+    function _startBattle() internal virtual returns (uint battleId_) {
+        battleId_ = ++battleId;
+        emit BattleIdIncremented(battleId_);
 
-        battleRecord[battleId] = Battle(
+        battleRecord[battleId_] = Battle(
             msg.sender,
             Result.NOT_YET,
             block.timestamp,
             0
         );
-        emit BattleRecorded(battleId, msg.sender, Result.NOT_YET, block.timestamp, 0);
-        return battleId;
+        emit BattleRecorded(battleId_, msg.sender, Result.NOT_YET, block.timestamp, 0);
+
+        latestBattleIds[msg.sender] = battleId_;
+
+        randomSeeds[battleId_] = RandomSeed(
+            block.number - 1,
+            block.timestamp,
+            tx.origin
+        );
+        emit RandomSeedRecorded(battleId_, block.number - 1, block.timestamp, tx.origin);
     }
 
     function _endBattle(

@@ -19,16 +19,15 @@ contract PlasmaBattleAlphaNFT is ERC721, Ownable {
                                 STORAGE
     //////////////////////////////////////////////////////////////*/
     uint public currentTokenId;
-    string constant NAME = "PlasmaBattleAlphaNFT #";
+
+    string constant NAME = "HybridAutoBattleAlphaNFT";
     string constant DESCRIPTION =
-        "This NFT is minted to the early completed user on PlasmaBattle.";
+        "This NFT is minted to the early completed user.";
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(
-        address _minter
-    ) ERC721("PlasmaBattleAlphaNFT", "PlasmaBattleAlphaNFT") Ownable(_minter) {}
+    constructor(address _minter) ERC721(NAME, NAME) Ownable(_minter) {}
 
     /*//////////////////////////////////////////////////////////////
                             EXTERNAL UPDATE
@@ -59,7 +58,9 @@ contract PlasmaBattleAlphaNFT is ERC721, Ownable {
 '<rect width="30" height="10" x="150" y="130" fill="#ffef16"/><rect width="20" height="10" x="180" y="130" fill="#ffffff"/><rect width="20" height="10" x="200" y="130" fill="#000000"/><rect width="10" height="10" x="220" y="130" fill="#ffef16"/><rect width="10" height="10" x="70" y="140" fill="#ffef16"/><rect width="10" height="10" x="100" y="140" fill="#ffef16"/><rect width="20" height="10" x="110" y="140" fill="#ffffff"/>',
 '<rect width="20" height="10" x="130" y="140" fill="#000000"/><rect width="10" height="10" x="150" y="140" fill="#ffef16"/><rect width="10" height="10" x="170" y="140" fill="#ffef16"/><rect width="20" height="10" x="180" y="140" fill="#ffffff"/><rect width="20" height="10" x="200" y="140" fill="#000000"/><rect width="10" height="10" x="220" y="140" fill="#ffef16"/><rect width="10" height="10" x="70" y="150" fill="#ffef16"/><rect width="10" height="10" x="100" y="150" fill="#ffef16"/>',
 '<rect width="20" height="10" x="110" y="150" fill="#ffffff"/><rect width="20" height="10" x="130" y="150" fill="#000000"/><rect width="10" height="10" x="150" y="150" fill="#ffef16"/><rect width="10" height="10" x="170" y="150" fill="#ffef16"/><rect width="20" height="10" x="180" y="150" fill="#ffffff"/><rect width="20" height="10" x="200" y="150" fill="#000000"/><rect width="10" height="10" x="220" y="150" fill="#ffef16"/><rect width="60" height="10" x="100" y="160" fill="#ffef16"/><rect width="60" height="10" x="170" y="160" fill="#ffef16"/>',
-'<text x="150" y="220" font-size="16" fill="#fff" text-anchor="middle" style="font-family: ', "'Londrina Solid'", ';">PlasmaAutoBattle #',
+'<text x="150" y="220" font-size="16" fill="#fff" text-anchor="middle" style="font-family: ', "'Londrina Solid'", ';">',
+NAME,
+' #',
 Strings.toString(_tokenId),
 '</text></svg>'
                     )
@@ -71,7 +72,7 @@ Strings.toString(_tokenId),
         uint256 _id
     ) public pure override returns (string memory) {
         TokenURIParams memory params = TokenURIParams({
-            name: string(abi.encodePacked(NAME, Strings.toString(_id))),
+            name: string(abi.encodePacked(NAME, " #", Strings.toString(_id))),
             description: DESCRIPTION,
             image: generateImage(_id)
         });
