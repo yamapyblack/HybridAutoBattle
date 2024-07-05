@@ -212,7 +212,7 @@ export default class GameBattle extends Phaser.Scene {
       .image(WINDOW_SIZE.x / 2, 680, "next")
       .setScale(0.32)
       .setOrigin(0.5, 0.5)
-      .setInteractive()
+      .setInteractive({ useHandCursor: true })
       .on("pointerdown", async () => {
         await this.goNextAction();
       });
@@ -223,7 +223,7 @@ export default class GameBattle extends Phaser.Scene {
         fontFamily: "Londrina Solid",
       })
       .setOrigin(0.5, 0.5)
-      .setInteractive()
+      .setInteractive({ useHandCursor: true })
       .on("pointerdown", async () => {
         await this.goNextAction();
       });
