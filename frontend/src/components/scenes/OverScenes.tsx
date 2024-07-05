@@ -55,6 +55,7 @@ const OverScenes = ({ result, battleId, setTutorial, stage, refetchStage }) => {
     () => {
       if (stage === Number(dataMaxStage)) {
         // setIsMinted(true);
+        return;
       } else {
         if (stage === 0) {
           setTutorial(TUTORIAL.MoveSubUnit);
