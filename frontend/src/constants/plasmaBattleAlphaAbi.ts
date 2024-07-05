@@ -1,436 +1,884 @@
 export const PlasmaBattleAlphaAbi: any = [
   {
-    type: "constructor",
-    inputs: [{ name: "_signer", type: "address", internalType: "address" }],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "battleId",
-    inputs: [],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "battleRecord",
-    inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    outputs: [
-      { name: "player", type: "address", internalType: "address" },
-      { name: "result", type: "uint8", internalType: "enum Result" },
-      { name: "startTimestamp", type: "uint256", internalType: "uint256" },
-      { name: "endTimestamp", type: "uint256", internalType: "uint256" },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "endBattle",
-    inputs: [
-      { name: "_battleId", type: "uint256", internalType: "uint256" },
-      { name: "_result", type: "uint8", internalType: "enum Result" },
-      { name: "_signature", type: "bytes", internalType: "bytes" },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "enemyUnitsByStage",
-    inputs: [
-      { name: "", type: "uint256", internalType: "uint256" },
-      { name: "", type: "uint256", internalType: "uint256" },
-    ],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getEnemyUnits",
-    inputs: [{ name: "_stage", type: "uint256", internalType: "uint256" }],
-    outputs: [{ name: "", type: "uint256[5]", internalType: "uint256[5]" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getPlayerUnits",
-    inputs: [{ name: "_player", type: "address", internalType: "address" }],
-    outputs: [{ name: "", type: "uint256[5]", internalType: "uint256[5]" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getRandomNumber",
-    inputs: [
-      { name: "_battleId", type: "uint256", internalType: "uint256" },
-      { name: "_index", type: "uint8", internalType: "uint8" },
-    ],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getRandomNumbers",
-    inputs: [
-      { name: "_battleId", type: "uint256", internalType: "uint256" },
-      { name: "_index", type: "uint8", internalType: "uint8" },
-      { name: "_i", type: "uint8", internalType: "uint8" },
-    ],
-    outputs: [{ name: "", type: "uint256[]", internalType: "uint256[]" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getSubUnits",
-    inputs: [{ name: "_player", type: "address", internalType: "address" }],
-    outputs: [{ name: "", type: "uint256[5]", internalType: "uint256[5]" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "latestBattleIds",
-    inputs: [{ name: "", type: "address", internalType: "address" }],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "maxStage",
-    inputs: [],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "maxStamina",
-    inputs: [],
-    outputs: [{ name: "", type: "uint8", internalType: "uint8" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "maxUnitIdByStage",
-    inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "newUnitByStage",
-    inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "newUnits",
-    inputs: [
-      { name: "", type: "uint256", internalType: "uint256" },
-      { name: "", type: "uint256", internalType: "uint256" },
-    ],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "nftAddress",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "owner",
-    inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "playerStage",
-    inputs: [{ name: "", type: "address", internalType: "address" }],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "randomSeeds",
-    inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    outputs: [
-      { name: "prevBlockNumber", type: "uint256", internalType: "uint256" },
-      { name: "timestamp", type: "uint256", internalType: "uint256" },
-      { name: "txOrigin", type: "address", internalType: "address" },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "recoverStamina",
-    inputs: [],
-    outputs: [],
-    stateMutability: "payable",
-  },
-  {
-    type: "function",
-    name: "renounceOwnership",
-    inputs: [],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "setEnemyUnitsByStage",
-    inputs: [
-      { name: "_stage", type: "uint256", internalType: "uint256" },
-      { name: "_enemyUnits", type: "uint256[5]", internalType: "uint256[5]" },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "setMaxStage",
-    inputs: [{ name: "_maxStage", type: "uint256", internalType: "uint256" }],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "setMaxStamina",
-    inputs: [{ name: "_maxStamina", type: "uint8", internalType: "uint8" }],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "setMaxUnitIdByStage",
-    inputs: [
-      { name: "_stage", type: "uint256", internalType: "uint256" },
-      { name: "_maxUnitId", type: "uint256", internalType: "uint256" },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "setNewUnitByStage",
-    inputs: [
-      { name: "_stage", type: "uint256", internalType: "uint256" },
-      { name: "_newUnitId", type: "uint256", internalType: "uint256" },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "setNftAddress",
-    inputs: [{ name: "_nftAddress", type: "address", internalType: "address" }],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "setSigner",
-    inputs: [{ name: "_signer", type: "address", internalType: "address" }],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "setStaminaRecoveryCost",
     inputs: [
       {
-        name: "_starminaRecoveryCost",
-        type: "uint256",
-        internalType: "uint256",
+        internalType: "address",
+        name: "_signer",
+        type: "address",
       },
     ],
-    outputs: [],
     stateMutability: "nonpayable",
+    type: "constructor",
   },
   {
-    type: "function",
-    name: "signer",
     inputs: [],
-    outputs: [{ name: "", type: "address", internalType: "address" }],
-    stateMutability: "view",
+    name: "BattleAlreadyEnd",
+    type: "error",
   },
   {
-    type: "function",
-    name: "staminas",
-    inputs: [{ name: "", type: "address", internalType: "address" }],
-    outputs: [{ name: "", type: "uint8", internalType: "uint8" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "starminaRecoveryCost",
     inputs: [],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "view",
+    name: "BattleNotStartedYet",
+    type: "error",
   },
   {
-    type: "function",
-    name: "startBattle",
-    inputs: [
-      { name: "_playerUnits", type: "uint256[5]", internalType: "uint256[5]" },
-      { name: "_subUnits", type: "uint256[5]", internalType: "uint256[5]" },
-    ],
-    outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "transferOwnership",
-    inputs: [{ name: "newOwner", type: "address", internalType: "address" }],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "validateUnits",
-    inputs: [
-      { name: "_stage", type: "uint256", internalType: "uint256" },
-      { name: "_playerUnits", type: "uint256[5]", internalType: "uint256[5]" },
-      { name: "_subUnits", type: "uint256[5]", internalType: "uint256[5]" },
-    ],
-    outputs: [{ name: "", type: "bool", internalType: "bool" }],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "withdraw",
     inputs: [],
-    outputs: [],
-    stateMutability: "nonpayable",
+    name: "ECDSAInvalidSignature",
+    type: "error",
   },
   {
-    type: "event",
-    name: "BattleIdIncremented",
     inputs: [
       {
-        name: "battleId",
+        internalType: "uint256",
+        name: "length",
         type: "uint256",
+      },
+    ],
+    name: "ECDSAInvalidSignatureLength",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "s",
+        type: "bytes32",
+      },
+    ],
+    name: "ECDSAInvalidSignatureS",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidShortString",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidSignature",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidUnitId",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "MustResultEnd",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+    ],
+    name: "OwnableInvalidOwner",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "OwnableUnauthorizedAccount",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "StaminaNotEnough",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "StaminaRecoveryAlreadyFull",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "StaminaRecoveryPaymentInvalid",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "str",
+        type: "string",
+      },
+    ],
+    name: "StringTooLong",
+    type: "error",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: false,
         internalType: "uint256",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "BattleRecorded",
-    inputs: [
-      {
         name: "battleId",
         type: "uint256",
+      },
+    ],
+    name: "BattleIdIncremented",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: "uint256",
+        name: "battleId",
+        type: "uint256",
       },
       {
+        indexed: true,
+        internalType: "address",
         name: "player",
         type: "address",
-        indexed: true,
-        internalType: "address",
       },
       {
-        name: "result",
-        type: "uint8",
         indexed: true,
         internalType: "enum Result",
+        name: "result",
+        type: "uint8",
       },
       {
+        indexed: false,
+        internalType: "uint256",
         name: "startTimestamp",
         type: "uint256",
-        indexed: false,
-        internalType: "uint256",
       },
       {
+        indexed: false,
+        internalType: "uint256",
         name: "endTimestamp",
         type: "uint256",
-        indexed: false,
-        internalType: "uint256",
       },
     ],
-    anonymous: false,
+    name: "BattleRecorded",
+    type: "event",
   },
   {
+    anonymous: false,
+    inputs: [],
+    name: "EIP712DomainChanged",
     type: "event",
-    name: "OwnershipTransferred",
+  },
+  {
+    anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "address",
         name: "previousOwner",
         type: "address",
-        indexed: true,
-        internalType: "address",
       },
       {
+        indexed: true,
+        internalType: "address",
         name: "newOwner",
         type: "address",
-        indexed: true,
-        internalType: "address",
       },
     ],
-    anonymous: false,
+    name: "OwnershipTransferred",
+    type: "event",
   },
   {
-    type: "event",
-    name: "RandomSeedRecorded",
+    anonymous: false,
     inputs: [
       {
-        name: "battleId",
-        type: "uint256",
         indexed: true,
         internalType: "uint256",
+        name: "battleId",
+        type: "uint256",
       },
       {
+        indexed: false,
+        internalType: "uint256",
         name: "prevBlockNumber",
         type: "uint256",
-        indexed: false,
-        internalType: "uint256",
       },
       {
+        indexed: false,
+        internalType: "uint256",
         name: "timestamp",
         type: "uint256",
-        indexed: false,
-        internalType: "uint256",
       },
       {
-        name: "txOrigin",
-        type: "address",
         indexed: false,
         internalType: "address",
+        name: "txOrigin",
+        type: "address",
       },
     ],
-    anonymous: false,
-  },
-  { type: "error", name: "BattleAlreadyEnd", inputs: [] },
-  { type: "error", name: "BattleNotStartedYet", inputs: [] },
-  { type: "error", name: "ECDSAInvalidSignature", inputs: [] },
-  {
-    type: "error",
-    name: "ECDSAInvalidSignatureLength",
-    inputs: [{ name: "length", type: "uint256", internalType: "uint256" }],
+    name: "RandomSeedRecorded",
+    type: "event",
   },
   {
-    type: "error",
-    name: "ECDSAInvalidSignatureS",
-    inputs: [{ name: "s", type: "bytes32", internalType: "bytes32" }],
+    inputs: [],
+    name: "battleId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
-  { type: "error", name: "InvalidSignature", inputs: [] },
-  { type: "error", name: "InvalidUnitId", inputs: [] },
-  { type: "error", name: "MustResultEnd", inputs: [] },
   {
-    type: "error",
-    name: "OwnableInvalidOwner",
-    inputs: [{ name: "owner", type: "address", internalType: "address" }],
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "battleRecord",
+    outputs: [
+      {
+        internalType: "address",
+        name: "player",
+        type: "address",
+      },
+      {
+        internalType: "enum Result",
+        name: "result",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "startTimestamp",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "endTimestamp",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
-    type: "error",
-    name: "OwnableUnauthorizedAccount",
-    inputs: [{ name: "account", type: "address", internalType: "address" }],
+    inputs: [],
+    name: "eip712Domain",
+    outputs: [
+      {
+        internalType: "bytes1",
+        name: "fields",
+        type: "bytes1",
+      },
+      {
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "version",
+        type: "string",
+      },
+      {
+        internalType: "uint256",
+        name: "chainId",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "verifyingContract",
+        type: "address",
+      },
+      {
+        internalType: "bytes32",
+        name: "salt",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint256[]",
+        name: "extensions",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
-  { type: "error", name: "StaminaNotEnough", inputs: [] },
-  { type: "error", name: "StaminaRecoveryAlreadyFull", inputs: [] },
-  { type: "error", name: "StaminaRecoveryPaymentInvalid", inputs: [] },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_battleId",
+        type: "uint256",
+      },
+      {
+        internalType: "enum Result",
+        name: "_result",
+        type: "uint8",
+      },
+      {
+        internalType: "bytes",
+        name: "_signature",
+        type: "bytes",
+      },
+      {
+        internalType: "uint256[10]",
+        name: "_playerUnits",
+        type: "uint256[10]",
+      },
+    ],
+    name: "endAndStartBattle",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_battleId",
+        type: "uint256",
+      },
+      {
+        internalType: "enum Result",
+        name: "_result",
+        type: "uint8",
+      },
+      {
+        internalType: "bytes",
+        name: "_signature",
+        type: "bytes",
+      },
+    ],
+    name: "endBattle",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "enemyUnitsByStage",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_stage",
+        type: "uint256",
+      },
+    ],
+    name: "getEnemyUnits",
+    outputs: [
+      {
+        internalType: "uint256[5]",
+        name: "",
+        type: "uint256[5]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_player",
+        type: "address",
+      },
+    ],
+    name: "getPlayerUnits",
+    outputs: [
+      {
+        internalType: "uint256[10]",
+        name: "",
+        type: "uint256[10]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_battleId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint8",
+        name: "_index",
+        type: "uint8",
+      },
+    ],
+    name: "getRandomNumber",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_battleId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint8",
+        name: "_index",
+        type: "uint8",
+      },
+      {
+        internalType: "uint8",
+        name: "_i",
+        type: "uint8",
+      },
+    ],
+    name: "getRandomNumbers",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "initialUnits",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "latestBattleIds",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "maxStage",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "maxStamina",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "newUnitByStage",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "nftAddress",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "playerStage",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "randomSeeds",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "prevBlockNumber",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "timestamp",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "txOrigin",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "recoverStamina",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_stage",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256[5]",
+        name: "_enemyUnits",
+        type: "uint256[5]",
+      },
+    ],
+    name: "setEnemyUnitsByStage",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256[10]",
+        name: "_initialUnits",
+        type: "uint256[10]",
+      },
+    ],
+    name: "setInitialUnits",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_maxStage",
+        type: "uint256",
+      },
+    ],
+    name: "setMaxStage",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint8",
+        name: "_maxStamina",
+        type: "uint8",
+      },
+    ],
+    name: "setMaxStamina",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_stage",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_newUnitId",
+        type: "uint256",
+      },
+    ],
+    name: "setNewUnitByStage",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_nftAddress",
+        type: "address",
+      },
+    ],
+    name: "setNftAddress",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_signer",
+        type: "address",
+      },
+    ],
+    name: "setSigner",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_starminaRecoveryCost",
+        type: "uint256",
+      },
+    ],
+    name: "setStaminaRecoveryCost",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "signer",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "staminas",
+    outputs: [
+      {
+        internalType: "uint8",
+        name: "",
+        type: "uint8",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "starminaRecoveryCost",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256[10]",
+        name: "_playerUnits",
+        type: "uint256[10]",
+      },
+    ],
+    name: "startBattle",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
+    name: "transferOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "signature",
+        type: "bytes",
+      },
+      {
+        internalType: "uint256",
+        name: "_battleId",
+        type: "uint256",
+      },
+      {
+        internalType: "enum Result",
+        name: "_result",
+        type: "uint8",
+      },
+    ],
+    name: "verify",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "withdraw",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
 ];

@@ -6,8 +6,16 @@ const PopupComponent = ({
   clickCancel,
 }) => {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-      <div className="bg-darkgray rounded-lg text-center w-80">
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40"
+      onClick={() => {
+        clickCancel && clickCancel();
+      }}
+    >
+      <div
+        className="bg-main border-2 rounded-lg text-center w-80"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="pt-4 pb-2 text-xl">{title}</div>
         {/* To recover stamina you should pay 0.1 ETH */}
         <div className="">{description}</div>

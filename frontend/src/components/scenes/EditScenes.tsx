@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   useReadPlayerUnits,
-  useReadSubUnits,
   useWriteStartBattle,
   useWriteRecoverStamina,
   useReadWatchLatestBattleIds,
@@ -16,7 +15,7 @@ import { convertUnitIdsToNumber, parseEtherToBigint } from "src/utils/Utils";
 import { readStorage } from "src/utils/debugStorage";
 import { TUTORIAL } from "src/constants/interface";
 
-const initPlayerIds = [1, 2, 3];
+const initPlayerIds = [1001, 1001, 1003];
 
 type DragAndDrop = {
   index: number;
@@ -73,8 +72,15 @@ const EditScenes = ({
         window.location.href = `${currentUrl}?battle_id=${battleId}`;
       }
     },
-    playerUnitIds,
-    subUnitIds
+    // Array of 0-4 is playerUnitIds, 5-9 is subUnitIds
+    // If playerUnitIds is less than 5, fill the rest with 0
+    [
+      ...[0, 1, 2, 3, 4].map((i) => {
+        if (playerUnitIds[i] === undefined) return 0;
+        return playerUnitIds[i];
+      }),
+      ...subUnitIds,
+    ]
   );
 
   const { write: writeStamina } = useWriteRecoverStamina(
@@ -96,7 +102,6 @@ const EditScenes = ({
  * useReadContract
  ============================*/
   const dataPlayerUnits = useReadPlayerUnits();
-  const dataSubUnits = useReadSubUnits();
   const dataLatestBattleId = useReadWatchLatestBattleIds();
   const dataMaxStage = useReadMaxStage();
 
@@ -110,21 +115,19 @@ const EditScenes = ({
       if ((dataPlayerUnits as []).every((id) => Number(id) === 0)) {
         setPlayerUnitIds(initPlayerIds);
       } else {
+        //Split dataPlayerUnits to playerUnitIds and subUnitIds
+        //0-4 is playerUnitIds, 5-9 is subUnitIds
         const _playerUnitIds = convertUnitIdsToNumber(
-          dataPlayerUnits as BigInt[]
+          dataPlayerUnits.slice(0, 5) as BigInt[]
+        );
+        const _subUnitIds = convertUnitIdsToNumber(
+          dataPlayerUnits.slice(5) as BigInt[]
         );
         setPlayerUnitIds(_playerUnitIds);
+        setSubUnitIds(_subUnitIds);
       }
     }
   }, [dataPlayerUnits]);
-
-  useEffect(() => {
-    console.log("dataSubUnits", dataSubUnits);
-    if (dataSubUnits) {
-      const _subUnitIds = convertUnitIdsToNumber(dataSubUnits as BigInt[]);
-      setSubUnitIds(_subUnitIds);
-    }
-  }, [dataSubUnits]);
 
   //Initialize and refetch latestBattleId
   useEffect(() => {
@@ -264,13 +267,13 @@ const EditScenes = ({
         />
       )}
 
-      <TutorialComponent
+      {/* <TutorialComponent
         isTutorial={!isCoverVisible}
         tutorial={tutorial}
         onComplete={() => {
           clearTutorial();
         }}
-      />
+      /> */}
       <CoverComponent
         isCoverVisible={isCoverVisible}
         onClick={() => setCoverVisible(false)}
@@ -280,16 +283,13 @@ const EditScenes = ({
       />
       <div className="flex flex-col items-center">
         <main className="flex flex-col" style={{ width: "1080px" }}>
-          <section className="mt-24 mx-auto">
-            <div className="flex justify-center text-lg font-bold">
-              Starting units
+          <section className="mt-2 mx-auto">
+            <div className="flex justify-center text-3xl font-bold">
+              STARTING
             </div>
-            <div
-              className="flex flex-row-reverse mt-4"
-              style={{ width: "640px", height: "144px" }}
-            >
+            <div className="flex justify-center mt-1">
               {Array.from({ length: 5 }).map((_, index) => (
-                <div className="mx-2 bg-darkgray rounded-md" key={index}>
+                <div className="mx-2 rounded-md" key={index}>
                   <EditUnitComponent
                     index={index}
                     unitId={playerUnitIds[index]}
@@ -305,13 +305,10 @@ const EditScenes = ({
             </div>
           </section>
           <section className="mt-16 mx-auto">
-            <div className="flex justify-center text-lg font-bold">
-              Reserve units
+            <div className="flex justify-center text-3xl font-bold">
+              RESERVE
             </div>
-            <div
-              className="flex flex-row-reverse mt-4 justify-center bg-darkgray rounded-md"
-              style={{ width: "628px", height: "144px" }}
-            >
+            <div className="flex justify-center mt-1">
               {Array.from({ length: 5 }).map((_, index) => (
                 <div className="mx-2" key={index}>
                   <EditUnitComponent

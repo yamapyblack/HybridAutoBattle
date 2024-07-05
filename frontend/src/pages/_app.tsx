@@ -1,12 +1,7 @@
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
 import { WagmiProvider, createConfig, http } from "wagmi";
-import {
-  base,
-  baseSepolia,
-  scrollSepolia,
-  zkSyncSepoliaTestnet,
-} from "wagmi/chains";
+import { scrollSepolia } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import "../styles/global.css";
@@ -14,12 +9,12 @@ import "../styles/global.css";
 const config = createConfig(
   getDefaultConfig({
     // Your dApps chains
-    chains: [zkSyncSepoliaTestnet],
+    chains: [scrollSepolia],
     transports: {
-      // [scrollSepolia.id]: http(scrollSepolia.rpcUrls.default.http[0]),
-      [zkSyncSepoliaTestnet.id]: http(
-        zkSyncSepoliaTestnet.rpcUrls.default.http[0]
-      ),
+      [scrollSepolia.id]: http(scrollSepolia.rpcUrls.default.http[0]),
+      // [zkSyncSepoliaTestnet.id]: http(
+      //   zkSyncSepoliaTestnet.rpcUrls.default.http[0]
+      // ),
       // [base.id]: http(base.rpcUrls.default.http[0]),
       // [baseSepolia.id]: http(baseSepolia.rpcUrls.default.http[0]),
     },

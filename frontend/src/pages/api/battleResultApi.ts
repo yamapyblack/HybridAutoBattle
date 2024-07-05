@@ -1,7 +1,6 @@
 // import { kv } from "@vercel/kv";
 // import { kv } from "../../stores/kv";
 import { NextApiRequest, NextApiResponse } from "next";
-import { RESULT } from "src/constants/interface";
 import { readContract } from "@wagmi/core";
 import { PlasmaBattleAlphaAbi } from "src/constants/plasmaBattleAlphaAbi";
 import addresses from "src/constants/addresses";
@@ -11,9 +10,9 @@ import {
   type UnitVariable,
   unitVariableDefaultValues,
   SKILL_TIMING,
+  RESULT,
 } from "src/constants/interface";
 import { SKILLS } from "src/constants/skills";
-import { ethers } from "ethers";
 import { units } from "src/constants/units";
 import { convertUnitIdsToNumber } from "src/utils/Utils";
 import { createConfig, http } from "wagmi";
@@ -23,6 +22,7 @@ import {
   base,
   baseSepolia,
 } from "wagmi/chains";
+import { privateKeyToAccount } from "viem/accounts";
 
 export const getWagmiConfig = (chainId: number) => {
   switch (chainId) {
@@ -58,6 +58,53 @@ export const getWagmiConfig = (chainId: number) => {
       });
     default:
       throw new Error("chainId is not found");
+  }
+};
+
+const _sign = async (chainId, contractAddress, battleId, _result) => {
+  // Assuming you have the private key and the battleId and result
+  const privateKey = process.env.PRIVATE_KEY!;
+  const account = privateKeyToAccount(privateKey as `0x${string}`);
+
+  // EIP712 Domain
+  const domain = {
+    name: "PlasmaBattle",
+    version: "1",
+    chainId: Number(chainId),
+    verifyingContract: contractAddress,
+  };
+
+  // EIP712 Types
+  const types = {
+    BattleResult: [
+      { name: "battleId", type: "uint" },
+      { name: "result", type: "uint8" },
+    ],
+  };
+
+  // Data to sign
+  const value = {
+    battleId: battleId,
+    result: _result,
+  };
+
+  const signature = await account.signTypedData({
+    domain,
+    types,
+    primaryType: "BattleResult",
+    message: value,
+  });
+  console.log("signature", signature);
+  return signature;
+};
+
+const removeKilledUnitAll = (units, unitVariables) => {
+  //Judge if life is 0
+  for (let i = unitVariables.length - 1; i >= 0; i--) {
+    if (unitVariables[i].life === 0) {
+      units.splice(i, 1);
+      unitVariables.splice(i, 1);
+    }
   }
 };
 
@@ -118,7 +165,10 @@ export default async function handler(
     });
 
     //BitInt to Number
-    const playerUnitIds = convertUnitIdsToNumber(_resPlayerUnitIds as BigInt[]);
+    //0-4 is playerUnitIds
+    const playerUnitIds = convertUnitIdsToNumber(
+      (_resPlayerUnitIds as BigInt[]).slice(0, 5)
+    );
     const enemyUnitsByStage = convertUnitIdsToNumber(
       _resEnemyUnits as BigInt[]
     );
@@ -155,20 +205,21 @@ export default async function handler(
     );
 
     //Start of battle
-    for (let i = 0; i < 5; i++) {
+    for (let i = 4; i >= 0; i--) {
       if (playerUnits[i]) {
         for (let j = 0; j < playerUnits[i].skillIds.length; j++) {
           const _skill = SKILLS[playerUnits[i].skillIds[j]];
           if (_skill.timing === SKILL_TIMING.StartOfBattle) {
-            console.log("executeSkill", i, true);
-
             await battleClass!.executeSkill(
               playerUnitsVariable,
               enemyUnitsVariable,
-              i,
               true,
+              i,
               _skill
             );
+            //Judge if life is 0
+            removeKilledUnitAll(playerUnits, playerUnitsVariable);
+            removeKilledUnitAll(enemyUnits, enemyUnitsVariable);
           }
         }
       }
@@ -176,15 +227,16 @@ export default async function handler(
         for (let j = 0; j < enemyUnits[i].skillIds.length; j++) {
           const _skill = SKILLS[enemyUnits[i].skillIds[j]];
           if (_skill.timing === SKILL_TIMING.StartOfBattle) {
-            console.log("executeSkill", i, false);
-
             await battleClass!.executeSkill(
               playerUnitsVariable,
               enemyUnitsVariable,
-              i,
               false,
+              i,
               _skill
             );
+            //Judge if life is 0
+            removeKilledUnitAll(playerUnits, playerUnitsVariable);
+            removeKilledUnitAll(enemyUnits, enemyUnitsVariable);
           }
         }
       }
@@ -199,17 +251,10 @@ export default async function handler(
       // if (_result !== RESULT.NOT_YET) break;
 
       //Go nex action
-      console.log("Start attacking: ", loopCount);
       //damage
-      battleClass!.damageLife(
-        playerUnitsVariable,
-        0,
-        enemyUnitsVariable[0].attack
-      );
-      battleClass!.damageLife(
-        enemyUnitsVariable,
-        0,
-        playerUnitsVariable[0].attack
+      await battleClass!.attacking(
+        playerUnitsVariable[0],
+        enemyUnitsVariable[0]
       );
 
       //Judge if life is 0
@@ -232,22 +277,7 @@ export default async function handler(
       loopCount++;
     }
 
-    // Assuming you have the owner's private key
-
-    // Assuming you have the private key and the battleId and result
-    const privateKey = process.env.PRIVATE_KEY!;
-    const signer = new ethers.Wallet(privateKey);
-    console.log("signer", signer);
-    console.log("result", BigInt(_result));
-    const messageHash = ethers.solidityPackedKeccak256(
-      ["uint", "uint8"],
-      [battleId, _result]
-    );
-    console.log("messageHash", messageHash);
-    const signature = await signer.signMessage(ethers.getBytes(messageHash));
-
-    console.log("signature", signature);
-
+    const signature = await _sign(chainId, contractAddress, battleId, _result);
     return response
       .status(200)
       .json({ battleId: battleId, result: _result, signature: signature });

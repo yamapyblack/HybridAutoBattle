@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import {PlasmaBattleAlpha} from "../alpha/PlasmaBattleAlpha.sol";
+import {PlasmaBattleAlpha, Result} from "../alpha/PlasmaBattleAlpha.sol";
 
 contract PlasmaBattleAlphaMock is PlasmaBattleAlpha {
     constructor(address _signer) PlasmaBattleAlpha(_signer) {}
-
-    function setNewUnits(uint _stage, uint[5] memory _newUnits) external {
-        newUnits[_stage] = _newUnits;
-    }
 
     function setPlayerStage(address _player, uint _stage) external {
         playerStage[_player] = _stage;
@@ -16,12 +12,37 @@ contract PlasmaBattleAlphaMock is PlasmaBattleAlpha {
 
     function setPlayerUnits(
         address _player,
-        uint[5] memory _playerUnits
+        uint[10] memory _playerUnits
     ) external {
         playerUnits[_player] = _playerUnits;
     }
 
-    function setSubUnits(address _player, uint[5] memory _subUnits) external {
-        subUnits[_player] = _subUnits;
+    function hashTypedDataV4(
+        uint _battleId,
+        Result _result
+    ) external view returns (bytes32 digest) {
+        digest = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    keccak256("BattleResult(uint battleId,uint8 result)"),
+                    _battleId,
+                    _result
+                )
+            )
+        );
+    }
+
+    function validateUnits(
+        uint[10] memory _beforeUnits,
+        uint[10] memory _playerUnits
+    ) external pure returns (bool) {
+        return _validateUnits(_beforeUnits, _playerUnits);
+    }
+
+    function sortUnits(
+        uint[10] memory _units
+    ) external pure returns (uint[10] memory) {
+        _sortUnits(_units);
+        return _units;
     }
 }

@@ -20,7 +20,7 @@ contract PlasmaBattleAlphaNFT is ERC721, Ownable {
     //////////////////////////////////////////////////////////////*/
     uint public currentTokenId;
 
-    string constant NAME = "HybridAutoBattleAlphaNFT";
+    string constant NAME = "PlasmaBattleAlphaNFT";
     string constant DESCRIPTION =
         "This NFT is minted to the early completed user.";
 

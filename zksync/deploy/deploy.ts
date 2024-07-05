@@ -1,9 +1,10 @@
 import { Wallet } from "zksync-ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
+import hre from "hardhat";
 
 // An example of a deploy script that will deploy and call a simple contract.
-export default async function (hre: HardhatRuntimeEnvironment) {
+async function main() {
   console.log(`Running deploy script`);
 
   // Initialize the wallet.
@@ -29,16 +30,23 @@ export default async function (hre: HardhatRuntimeEnvironment) {
     `${artifactPlasmaBattleAlpha.contractName} was deployed to ${addressPlasmaBattleAlpha}`
   );
 
-  const artifactPlasmaBattleAlphaNFT = await deployer.loadArtifact(
-    "PlasmaBattleAlphaNFT"
-  );
-  const contractPlasmaBattleAlphaNFT = await deployer.deploy(
-    artifactPlasmaBattleAlphaNFT,
-    [addressPlasmaBattleAlpha]
-  );
-  console.log(
-    `${
-      artifactPlasmaBattleAlphaNFT.contractName
-    } was deployed to ${await contractPlasmaBattleAlphaNFT.getAddress()}`
-  );
+  // const artifactPlasmaBattleAlphaNFT = await deployer.loadArtifact(
+  //   "PlasmaBattleAlphaNFT"
+  // );
+  // const contractPlasmaBattleAlphaNFT = await deployer.deploy(
+  //   artifactPlasmaBattleAlphaNFT,
+  //   [addressPlasmaBattleAlpha]
+  // );
+  // console.log(
+  //   `${
+  //     artifactPlasmaBattleAlphaNFT.contractName
+  //   } was deployed to ${await contractPlasmaBattleAlphaNFT.getAddress()}`
+  // );
 }
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

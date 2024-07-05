@@ -5,7 +5,7 @@ import {
   SKILL_TARGET,
 } from "src/constants/interface";
 import { SKILLS } from "src/constants/skills";
-import Unit, { IUnit } from "./old_unitClass";
+import Unit, { IUnit } from "./UnitClass";
 
 /**============================
  * Constants

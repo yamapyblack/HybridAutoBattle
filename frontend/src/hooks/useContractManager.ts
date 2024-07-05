@@ -10,6 +10,7 @@ import {
 import { PlasmaBattleAlphaAbi } from "src/constants/plasmaBattleAlphaAbi";
 import addresses from "src/constants/addresses";
 import { writeStorage, readStorage } from "src/utils/debugStorage";
+import toast from "react-hot-toast";
 
 /**============================
  * useWatchContractEvent
@@ -99,13 +100,12 @@ export const useReadPlayerUnits = () => {
   return useRead("getPlayerUnits", [address as `0x${string}`]);
 };
 
-export const useReadSubUnits = () => {
-  const { address } = useAccount();
-  return useRead("getSubUnits", [address as `0x${string}`]);
-};
-
 export const useReadGetEnemyUnits = (stage: number) => {
   return useRead("getEnemyUnits", [BigInt(stage)]);
+};
+
+export const useNewUnitByStage = (stage: number) => {
+  return useRead("newUnitByStage", [BigInt(stage)]);
 };
 
 /**============================
@@ -116,20 +116,11 @@ export const useWriteRecoverStamina = (onSuccess, onComplete, value) => {
   return useWrite(onSuccess, onComplete, "recoverStamina", [], value);
 };
 
-export const useWriteStartBattle = (
-  onSuccess,
-  onComplete,
-  playerUnitIds,
-  subUnitIds
-) => {
+export const useWriteStartBattle = (onSuccess, onComplete, playerUnitIds) => {
   return useWrite(onSuccess, onComplete, "startBattle", [
-    [0, 1, 2, 3, 4].map((i) => {
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => {
       if (playerUnitIds[i] === undefined) return BigInt(0);
       return BigInt(playerUnitIds[i]);
-    }),
-    [0, 1, 2, 3, 4].map((i) => {
-      if (subUnitIds[i] === undefined) return BigInt(0);
-      return BigInt(subUnitIds[i]);
     }),
   ]);
 };
@@ -192,16 +183,24 @@ const useWrite = (
 ): UseWriteReturn => {
   const chainId = useChainId();
   const { data: hash, writeContract } = useWriteContract();
-  const { data: receiptData, isLoading } = useWaitForTransactionReceipt({
+  const {
+    isSuccess: txSuccess,
+    isError: txError,
+    isLoading,
+  } = useWaitForTransactionReceipt({
     hash,
   });
 
   useEffect(() => {
-    if (receiptData) {
-      console.log("Transaction receipt data", receiptData);
+    if (txSuccess) {
+      toast.success("Transaction completed!");
       onComplete();
     }
-  }, [receiptData, onComplete]);
+    if (txError) {
+      toast.error("Transaction failed!");
+      console.error(txError);
+    }
+  }, [txSuccess, txError, onComplete]);
 
   const write = async () => {
     if (process.env.NEXT_PUBLIC_DEBUG_MODE === "true") {
@@ -219,9 +218,11 @@ const useWrite = (
         },
         {
           onSuccess: () => {
+            toast.success("Transaction sent!");
             onSuccess();
           },
           onError: (e) => {
+            toast.error("Transaction failed!");
             console.error(e);
           },
         }

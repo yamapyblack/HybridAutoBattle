@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 // import {console2} from "forge-std/console2.sol";
 
 struct Battle {
@@ -37,7 +37,7 @@ event BattleIdIncremented(uint battleId);
 event BattleRecorded(uint indexed battleId, address indexed player, Result indexed result, uint startTimestamp, uint endTimestamp);
 event RandomSeedRecorded(uint indexed battleId, uint prevBlockNumber, uint timestamp, address txOrigin);
 
-abstract contract PlasmaBattle is Ownable {
+abstract contract PlasmaBattle is Ownable,EIP712 {
 
     /*//////////////////////////////////////////////////////////////
                                 STORAGE
@@ -54,7 +54,7 @@ abstract contract PlasmaBattle is Ownable {
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
-    constructor(address _signer) Ownable(msg.sender) {
+    constructor(address _signer) Ownable(msg.sender) EIP712("PlasmaBattle", "1")  {
         signer = _signer;
     }
 
@@ -72,6 +72,14 @@ abstract contract PlasmaBattle is Ownable {
     /*//////////////////////////////////////////////////////////////
                              EXTERNAL VIEW
     //////////////////////////////////////////////////////////////*/
+
+    function verify(
+        bytes memory signature,
+        uint _battleId,
+        Result _result
+    ) external view returns (bool) {
+        return _verify(signature, _battleId, _result);
+    }
 
     function getRandomNumber(uint _battleId, uint8 _index) public view returns (uint256) {
         RandomSeed memory randomSeed = randomSeeds[_battleId];
@@ -103,26 +111,26 @@ abstract contract PlasmaBattle is Ownable {
     /*//////////////////////////////////////////////////////////////
                             INTERNAL UPDATE
     //////////////////////////////////////////////////////////////*/
-    function _startBattle() internal virtual returns (uint battleId_) {
+    function _startBattle(address _player) internal virtual returns (uint battleId_) {
         battleId_ = ++battleId;
         emit BattleIdIncremented(battleId_);
 
         battleRecord[battleId_] = Battle(
-            msg.sender,
+            _player,
             Result.NOT_YET,
             block.timestamp,
             0
         );
-        emit BattleRecorded(battleId_, msg.sender, Result.NOT_YET, block.timestamp, 0);
+        emit BattleRecorded(battleId_, _player, Result.NOT_YET, block.timestamp, 0);
 
-        latestBattleIds[msg.sender] = battleId_;
+        latestBattleIds[_player] = battleId_;
 
         randomSeeds[battleId_] = RandomSeed(
             block.number - 1,
             block.timestamp,
-            tx.origin
+            msg.sender
         );
-        emit RandomSeedRecorded(battleId_, block.number - 1, block.timestamp, tx.origin);
+        emit RandomSeedRecorded(battleId_, block.number - 1, block.timestamp, msg.sender);
     }
 
     function _endBattle(
@@ -140,11 +148,7 @@ abstract contract PlasmaBattle is Ownable {
             battleRecord[_battleId].endTimestamp != 0
         ) revert PlasmaBattleErrors.BattleAlreadyEnd();
 
-
-        bytes32 digest = MessageHashUtils.toEthSignedMessageHash(
-            keccak256(abi.encodePacked(_battleId, _result))
-        );
-        if (!_isValidSignature(digest, _signature)) revert PlasmaBattleErrors.InvalidSignature();
+        if (!_verify(_signature, _battleId, _result)) revert PlasmaBattleErrors.InvalidSignature();
 
         battleRecord[_battleId].result = _result;
         battleRecord[_battleId].endTimestamp = block.timestamp;
@@ -154,11 +158,21 @@ abstract contract PlasmaBattle is Ownable {
     /*//////////////////////////////////////////////////////////////
                              INTERNAL VIEW
     //////////////////////////////////////////////////////////////*/
-    function _isValidSignature(
-        bytes32 hash,
-        bytes memory signature
-    ) internal virtual view returns (bool) {
-        return ECDSA.recover(hash, signature) == signer;
+    function _verify(
+        bytes memory signature,
+        uint _battleId,
+        Result _result
+    ) internal view returns (bool) {
+        bytes32 digest = _hashTypedDataV4(
+            keccak256(
+                abi.encode(
+                    keccak256("BattleResult(uint battleId,uint8 result)"),
+                    _battleId,
+                    _result
+                )
+            )
+        );
+        address recoveredSigner = ECDSA.recover(digest, signature);
+        return recoveredSigner == signer;
     }
-
 }

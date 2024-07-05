@@ -1,7 +1,7 @@
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { clearStorage } from "src/utils/debugStorage";
-import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
+import { useAccount, useDisconnect, useEnsName } from "wagmi";
 import { truncatedText } from "src/utils/Utils";
 import PopupComponent from "src/components/ingame/PopupComponent";
 
@@ -29,42 +29,30 @@ const HeaderComponent = ({ stage, leftStamina }) => {
         <div className="flex justify-between">
           {/* Stamina and Stage */}
           <div className="flex ml-16 mt-4">
-            <div className="flex justify-between items-center w-20 rounded-md bg-darkgray  mr-2 pl-2 pr-2">
-              <Image
-                src="/images/edit/stage.png"
-                alt=""
-                width={16}
-                height={16}
-              />
-              <div className="text-lg font-bold">{stage + 1}</div>
+            <div className="flex justify-between items-center w-20 rounded-md text-2xl font-bold">
+              <p className="">STAGE:</p>
+              <p className="ml-2">{stage + 1}</p>
             </div>
-            <div className="flex justify-between items-center w-20 rounded-md bg-darkgray mr-2 pl-2 pr-2">
-              <Image
-                src="/images/common/life.png"
-                alt=""
-                width={16}
-                height={16}
-              />
-              <div className="text-lg font-bold">{leftStamina}</div>
+            <div className="flex justify-between items-center rounded-md ml-6">
+              {Array.from({ length: leftStamina }).map((_, index) => (
+                <div key={index} className="mx-1">
+                  <Image
+                    key={index}
+                    src="/images/common/life.png"
+                    alt=""
+                    width={24}
+                    height={24}
+                  />
+                </div>
+              ))}
             </div>
           </div>
-          <div className="flex mr-16 mt-4 justify-between items-center rounded-md bg-darkgray py-1.5 px-4">
-            <div className="mr-3">
-              <Image
-                src="/images/common/wallet_icon.png"
-                alt=""
-                width={18}
-                height={18}
-              />
-            </div>
+          <div className="mr-16 mt-4 text-2xl">
             {address && (
-              <button
-                className=" text-gray-300"
-                onClick={() => setShowDisconnectPopup(true)}
-              >
+              <button className="" onClick={() => setShowDisconnectPopup(true)}>
                 {ensName
-                  ? `${truncatedText(ensName, 12)}`
-                  : truncatedText(address, 12)}
+                  ? `${truncatedText(ensName, 14)}`
+                  : truncatedText(address, 14)}
               </button>
             )}
           </div>

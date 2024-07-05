@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { units } from "src/constants/units";
-import { SKILLS } from "src/constants/skills";
 
 const EditUnitComponent = ({
   index,
@@ -30,9 +29,7 @@ const EditUnitComponent = ({
   };
 
   const handleMouseEnter = () => {
-    if (units[unitId].skillIds.length > 0) {
-      setShowTooltip(true);
-    }
+    setShowTooltip(true);
   };
 
   const handleMouseLeave = () => {
@@ -42,26 +39,44 @@ const EditUnitComponent = ({
 
   return (
     <>
+      {showTooltip && (
+        <div
+          className="absolute top-24 left-8 z-10"
+          style={{
+            width: "300px",
+            height: "120px",
+            backgroundImage: `url('/images/battle/tooltip.png')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="py-2 px-3 text-lg">
+            <p className="">{units[unitId].name}</p>
+            <p className="">
+              {units[unitId].attack}/{units[unitId].life}
+            </p>
+            <p className="leading-tight">{units[unitId].description}</p>
+          </div>
+        </div>
+      )}
       <div className="p-2 relative">
         {!unitId ? (
           <>
-            {isSub ? (
-              <div
-                style={{
-                  width: "96px",
-                  height: "128px",
-                }}
-              ></div>
-            ) : (
-              <div
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                style={{
-                  width: "96px",
-                  height: "128px",
-                }}
-              ></div>
-            )}
+            <div
+              onDrop={!isSub ? handleDrop : undefined}
+              onDragOver={!isSub ? handleDragOver : undefined}
+              style={{
+                width: "160px",
+                height: "204px",
+              }}
+            >
+              <Image
+                src={`/images/cards/empty.png`}
+                alt=""
+                width={160}
+                height={204}
+              />
+            </div>
           </>
         ) : (
           <>
@@ -76,67 +91,48 @@ const EditUnitComponent = ({
                 setShowTooltip(false);
                 handleDoubleClick();
               }}
+              style={{
+                width: "160px",
+                height: "204px",
+              }}
             >
               <Image
                 src={`/images/cards/${units[unitId].imagePath}.png`}
                 alt=""
-                width={96}
-                height={96}
+                width={160}
+                height={204}
               />
             </div>
             <div className="flex justify-between">
-              <div className="w-8 relative">
-                <Image
-                  src="/images/common/attack.png"
-                  alt=""
-                  width={32}
-                  height={32}
-                />
-                <div className="absolute inset-0 flex items-center justify-center font-bold text-xl">
-                  {units[unitId].attack}
+              <div className="w-8 relative" style={{ top: "2px", left: "4px" }}>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Image
+                    src={`/images/common/numbers/${units[unitId].attack}.png`}
+                    alt=""
+                    width={160}
+                    height={204}
+                  />
                 </div>
               </div>
-              <div className="w-8 relative">
-                <Image
-                  src="/images/common/life.png"
-                  alt=""
-                  width={32}
-                  height={32}
-                />
-                <div className="absolute inset-0 flex items-center justify-center font-bold text-xl">
-                  {units[unitId].life}
+              <div
+                className="w-8 relative"
+                style={{ top: "2px", right: "3px" }}
+              >
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Image
+                    src={`/images/common/numbers/${units[unitId].life}.png`}
+                    alt=""
+                    width={160}
+                    height={204}
+                  />
                 </div>
               </div>
             </div>
           </>
         )}
-        {showTooltip && (
-          <div
-            className="absolute top-6 left-24 w-32 h-18 bg-darkgray rounded border-white border-solid border text-sm p-1"
-            style={{ fontFamily: "Inter" }}
-          >
-            <p>{SKILLS[units[unitId].skillIds[0]].description}</p>
-          </div>
-        )}
       </div>
     </>
   );
 };
-
-// const NumberComponent = ({ value }) => {
-//   const cellWidth = 30;
-//   return (
-//     <div
-//       style={{
-//         position: "absolute",
-//         left: 2,
-//         top: 3,
-//         width: cellWidth,
-//       }}
-//     >
-//       {value}
-//     </div>
-//   );
-// };
 
 export default EditUnitComponent;

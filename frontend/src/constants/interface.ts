@@ -41,8 +41,8 @@ export type Unit = {
   id: number;
   name: string;
   imagePath: string;
-  life: number;
   attack: number;
+  life: number;
   description: string;
   skillIds: number[];
 };

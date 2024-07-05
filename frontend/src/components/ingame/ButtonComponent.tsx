@@ -9,7 +9,7 @@ const ButtonComponent = ({ isLoading, write, text }) => {
   return (
     <>
       <button
-        className="bg-btn text-md font-bold text-btntext px-9 py-2 rounded-md text-decoration-none hover:opacity-90"
+        className="text-2xl font-bold px-10 rounded-md border-2 border-white text-decoration-none hover:opacity-90"
         onClick={() => {
           if (isLoading) return;
           write();

@@ -141,4 +141,22 @@ export const SKILLS: { [key: number]: Skill } = {
     target: SKILL_TARGET.Behind,
     value: 2,
   },
+  16: {
+    id: 16,
+    name: "StartBHealthFront1",
+    description: "",
+    timing: SKILL_TIMING.StartOfBattle,
+    effect: SKILL_EFFECT.BuffHealth,
+    target: SKILL_TARGET.InFrontOf,
+    value: 1,
+  },
+  17: {
+    id: 17,
+    name: "StartBAttackBehind2",
+    description: "",
+    timing: SKILL_TIMING.StartOfBattle,
+    effect: SKILL_EFFECT.BuffAttack,
+    target: SKILL_TARGET.Behind,
+    value: 2,
+  },
 };

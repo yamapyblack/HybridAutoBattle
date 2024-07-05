@@ -13,16 +13,25 @@ export type RandomSeed = {
 };
 
 export default class BattleClass {
+  /**============================
+   * Variables
+   ============================*/
   readonly battleId: number;
   readonly randomSeed: RandomSeed;
   private _randomIndex = 0;
 
+  /**============================
+   * Constructor
+   ============================*/
   constructor(battleId: number, randomSeed: RandomSeed) {
     this.battleId = battleId;
     this.randomSeed = randomSeed;
   }
 
-  getRnadomNumber = (_num: number): number => {
+  /**============================
+   * Public functions
+   ============================*/
+  getRandomNumber(_maxIdx: number): number {
     // return uint256(keccak256(abi.encodePacked(_battleId, randomSeed.prevBlockNumber, randomSeed.timestamp, randomSeed.txOrigin, _index)));
     const prevBlockNumber = this.randomSeed[0];
     const timestamp = this.randomSeed[1];
@@ -31,139 +40,143 @@ export default class BattleClass {
       ["uint256", "uint256", "uint256", "address", "uint8"],
       [this.battleId, prevBlockNumber, timestamp, txOrigin, this._randomIndex]
     );
-    console.log("encoded", _encoded);
-    const _randomNum = Number(_encoded) % _num;
-    console.log("randomNum", _randomNum);
+    const _randomNum = _encoded % BigInt(_maxIdx);
     this._randomIndex++;
-    return _randomNum;
-  };
+    return Number(_randomNum);
+  }
 
-  damageLife = (unitVals: UnitVariable[], index: number, value: number) => {
-    const _unitVariable = unitVals[index];
-    if (_unitVariable.life < value) value = _unitVariable.life;
-    _unitVariable.life -= value;
-    console.log("damageLife end");
-  };
+  getRandomNumbers(_maxIdx: number, _num: number): number[] {
+    const uniqueNumbers = new Set<number>();
+    const limit = Math.min(_maxIdx, _num);
 
-  debuffLife = (unitVals: UnitVariable[], index: number, value: number) => {
-    const _unitVariable = unitVals[index];
-    if (_unitVariable.life < value) value = _unitVariable.life;
-    _unitVariable.life -= value;
-    _unitVariable.isAnimateDebuffLife = value;
-    console.log("debuffLife end");
-  };
+    while (uniqueNumbers.size < limit) {
+      const _rand = this.getRandomNumber(_maxIdx);
+      uniqueNumbers.add(_rand);
+    }
 
-  debuffAttack = (unitVals: UnitVariable[], index: number, value: number) => {
-    const _unitVariable = unitVals[index];
-    if (_unitVariable.attack < value) value = _unitVariable.attack;
-    _unitVariable.attack -= value;
-    _unitVariable.isAnimateDebuffAttack = value;
-    console.log("debuffAttack end");
-  };
+    return Array.from(uniqueNumbers);
+  }
 
-  buffLife = async (unitVals: UnitVariable[], index: number, value: number) => {
-    const _unitVariable = unitVals[index];
-    _unitVariable.life += value;
-    _unitVariable.isAnimateBuffLife = value;
-    console.log("buffLife end");
-  };
-
-  buffAttack = (unitVals: UnitVariable[], index: number, value: number) => {
-    const _unitVariable = unitVals[index];
-    _unitVariable.attack += value;
-    _unitVariable.isAnimateBuffAttack = value;
-    console.log("buffAttack end");
-  };
-
-  executeSkill = async (
+  async executeSkill(
     _playerVals: UnitVariable[],
     _enemyVals: UnitVariable[],
-    _fromUnitIdx: number,
     _isFromPlayer: boolean,
+    _fromUnitIdx: number,
     _skill: Skill
-  ): Promise<void> => {
-    console.log("executeSkill");
+  ): Promise<void> {
+    console.log("executeSkill", _isFromPlayer, _fromUnitIdx, _skill.name);
 
-    const [_isToPlayer, _unitIndexes] = this._getSkillTarget(
+    const [_isToPlayer, _toIndexes] = this._getSkillTarget(
       _playerVals,
       _enemyVals,
-      _fromUnitIdx,
       _isFromPlayer,
+      _fromUnitIdx,
       _skill.target
     );
     //_values length is same as _unitIndexes length
-    const _values = _unitIndexes.map(() => _skill.value);
-    console.log(_unitIndexes, _values);
+    const _values = _toIndexes.map(() => _skill.value);
 
     await this._emitSkill(
       _playerVals,
       _enemyVals,
+      _isFromPlayer,
+      _fromUnitIdx,
       _isToPlayer,
-      _unitIndexes,
+      _toIndexes,
       _values,
       _skill.effect
     );
-  };
+  }
 
-  private _getSkillTarget = (
+  async attacking(
+    _playerVal: UnitVariable,
+    _enemyVal: UnitVariable
+  ): Promise<void> {
+    console.log("attacking");
+    this._debuffLife(_playerVal, _enemyVal.attack);
+    this._debuffLife(_enemyVal, _playerVal.attack);
+  }
+
+  /**============================
+   * Private and Protected functions
+   ============================*/
+  private _getSkillTarget(
     _playerVals: UnitVariable[],
     _enemyVals: UnitVariable[],
-    _fromUnitIdx: number,
     _isFromPlayer: boolean,
+    _fromUnitIdx: number,
     _skillTarget: SKILL_TARGET
-  ): [boolean, number[]] => {
+  ): [boolean, number[]] {
     let _isToPlayer: boolean = false;
-    let _unitIndexes: number[] = [];
+    let _toIndexes: number[] = [];
 
     switch (_skillTarget) {
       case SKILL_TARGET.RandomPlayer:
         if (_isFromPlayer) {
           _isToPlayer = true;
-          _unitIndexes = [this.getRnadomNumber(_playerVals.length)];
+          _toIndexes = [this.getRandomNumber(_playerVals.length)];
         } else {
           _isToPlayer = false;
-          _unitIndexes = [this.getRnadomNumber(_enemyVals.length)];
+          _toIndexes = [this.getRandomNumber(_enemyVals.length)];
+        }
+        break;
+
+      case SKILL_TARGET.Random2Players:
+        if (_isFromPlayer) {
+          _isToPlayer = true;
+          _toIndexes = this.getRandomNumbers(_playerVals.length, 2);
+        } else {
+          _isToPlayer = false;
+          _toIndexes = this.getRandomNumbers(_enemyVals.length, 2);
         }
         break;
 
       case SKILL_TARGET.RandomEnemy:
         if (_isFromPlayer) {
           _isToPlayer = false;
-          _unitIndexes = [this.getRnadomNumber(_enemyVals.length)];
+          _toIndexes = [this.getRandomNumber(_enemyVals.length)];
         } else {
           _isToPlayer = true;
-          _unitIndexes = [this.getRnadomNumber(_playerVals.length)];
+          _toIndexes = [this.getRandomNumber(_playerVals.length)];
+        }
+        break;
+
+      case SKILL_TARGET.Random2Enemies:
+        if (_isFromPlayer) {
+          _isToPlayer = false;
+          _toIndexes = this.getRandomNumbers(_enemyVals.length, 2);
+        } else {
+          _isToPlayer = true;
+          _toIndexes = this.getRandomNumbers(_playerVals.length, 2);
         }
         break;
 
       case SKILL_TARGET.InFrontOf:
-        console.log("InFrontOf");
         if (_isFromPlayer) {
           _isToPlayer = true;
           if (_fromUnitIdx > 0) {
-            _unitIndexes = [_fromUnitIdx - 1];
+            _toIndexes = [_fromUnitIdx - 1];
           } else {
-            _unitIndexes = [];
+            _toIndexes = [];
           }
         } else {
           _isToPlayer = false;
           if (_fromUnitIdx > 0) {
-            _unitIndexes = [_fromUnitIdx - 1];
+            _toIndexes = [_fromUnitIdx - 1];
           } else {
-            _unitIndexes = [];
+            _toIndexes = [];
           }
         }
         break;
 
       case SKILL_TARGET.Behind:
-        console.log("Behind");
         if (_isFromPlayer) {
           _isToPlayer = true;
-          _unitIndexes =
+          _toIndexes =
             _fromUnitIdx < _playerVals.length - 1 ? [_fromUnitIdx + 1] : [];
         } else {
           _isToPlayer = false;
-          _unitIndexes =
+          _toIndexes =
             _fromUnitIdx < _enemyVals.length - 1 ? [_fromUnitIdx + 1] : [];
         }
         break;
@@ -172,40 +185,125 @@ export default class BattleClass {
         //TODO error handling
         console.error("Invalid skill target");
     }
-    return [_isToPlayer, _unitIndexes];
-  };
+    return [_isToPlayer, _toIndexes];
+  }
 
-  private _emitSkill = async (
+  protected async _emitSkill(
     _playerVals: UnitVariable[],
     _enemyVals: UnitVariable[],
-    isToPlayer: boolean,
-    unitIndexes: number[],
-    values: number[],
-    skillEffect: SKILL_EFFECT
-  ): Promise<void> => {
-    if (unitIndexes.length !== values.length) {
+    _isFromPlayer: boolean, //unused, for animation
+    _fromUnitIdx: number, //unused, for animation
+    _isToPlayer: boolean,
+    _toIndexes: number[],
+    _values: number[],
+    _skillEffect: SKILL_EFFECT
+  ): Promise<void> {
+    if (_toIndexes.length !== _values.length) {
       console.error("emitSkillEffect: Index and value length are not same");
       return;
     }
 
-    for (let i = 0; i < unitIndexes.length; i++) {
-      const _unitVals = isToPlayer ? _playerVals : _enemyVals;
-      switch (skillEffect) {
-        case SKILL_EFFECT.BuffAttack:
-          await this.buffAttack(_unitVals, unitIndexes[i], values[i]);
-          break;
-        case SKILL_EFFECT.BuffHealth:
-          await this.buffLife(_unitVals, unitIndexes[i], values[i]);
-          break;
-        case SKILL_EFFECT.Damage:
-          await this.damageLife(_unitVals, unitIndexes[i], values[i]);
-          break;
-        case SKILL_EFFECT.DebuffAttack:
-          await this.debuffAttack(_unitVals, unitIndexes[i], values[i]);
-          break;
-        default:
-          console.error("Invalid skill effect");
+    for (let i = 0; i < _toIndexes.length; i++) {
+      const _unitVals = _isToPlayer ? _playerVals : _enemyVals;
+
+      //BuffAttack
+      if (_skillEffect === SKILL_EFFECT.BuffAttack) {
+        _unitVals[_toIndexes[i]].attack += _values[i];
+
+        await this.animateBuffAttack(
+          _isFromPlayer,
+          _fromUnitIdx,
+          _isToPlayer,
+          _toIndexes[i],
+          _unitVals[_toIndexes[i]].attack
+        );
+
+        //BuffHealth
+      } else if (_skillEffect === SKILL_EFFECT.BuffHealth) {
+        _unitVals[_toIndexes[i]].life += _values[i];
+
+        await this.animateBuffLife(
+          _isFromPlayer,
+          _fromUnitIdx,
+          _isToPlayer,
+          _toIndexes[i],
+          _unitVals[_toIndexes[i]].life
+        );
+
+        //Damage
+      } else if (_skillEffect === SKILL_EFFECT.Damage) {
+        this._debuffLife(_unitVals[_toIndexes[i]], _values[i]);
+        //TODO remove killed unit from array
+
+        await this.animateDebuffLife(
+          _isFromPlayer,
+          _fromUnitIdx,
+          _isToPlayer,
+          _toIndexes[i],
+          _unitVals[_toIndexes[i]].life
+        );
+
+        //DebuffAttack
+      } else if (_skillEffect === SKILL_EFFECT.DebuffAttack) {
+        this._debuffAttack(_unitVals[_toIndexes[i]], _values[i]);
+
+        await this.animateDebuffAttack(
+          _isFromPlayer,
+          _fromUnitIdx,
+          _isToPlayer,
+          _toIndexes[i],
+          _unitVals[_toIndexes[i]].attack
+        );
+
+        //Default error handling
+      } else {
+        console.error("Invalid skill effect");
       }
     }
-  };
+  }
+
+  private _debuffAttack(_unitVal: UnitVariable, _value: number): void {
+    if (_unitVal.attack < _value) _value = _unitVal.attack;
+    _unitVal.attack -= _value;
+  }
+
+  private _debuffLife(_unitVal: UnitVariable, _value: number): void {
+    if (_unitVal.life < _value) _value = _unitVal.life;
+    _unitVal.life -= _value;
+  }
+
+  /**============================
+   * Protected functions for animation
+   ============================*/
+  protected async animateBuffAttack(
+    _isFromPlayer: boolean,
+    _fromUnitIdx: number,
+    _isToPlayer: boolean,
+    _toUnitIdx: number,
+    _changedVal: number
+  ): Promise<void> {}
+
+  protected async animateBuffLife(
+    _isFromPlayer: boolean,
+    _fromUnitIdx: number,
+    _isToPlayer: boolean,
+    _toUnitIdx: number,
+    _changedVal: number
+  ): Promise<void> {}
+
+  protected async animateDebuffAttack(
+    _isFromPlayer: boolean,
+    _fromUnitIdx: number,
+    _isToPlayer: boolean,
+    _toUnitIdx: number,
+    _changedVal: number
+  ): Promise<void> {}
+
+  protected async animateDebuffLife(
+    _isFromPlayer: boolean,
+    _fromUnitIdx: number,
+    _isToPlayer: boolean,
+    _toUnitIdx: number,
+    _changedVal: number
+  ): Promise<void> {}
 }

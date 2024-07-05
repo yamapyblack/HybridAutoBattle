@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { useAccount } from "wagmi";
+import { useReadContract, useAccount, useChainId } from "wagmi";
+import { PlasmaBattleAlphaAbi } from "src/constants/plasmaBattleAlphaAbi";
+import addresses from "src/constants/addresses";
 import { ConnectWallet } from "src/components/ConnectWallet";
 import {
-  useReadPlayerStage,
   useReadPlayerStamina,
   useReadMaxStamina,
 } from "src/hooks/useContractManager";
@@ -13,10 +14,13 @@ import EditScenes from "src/components/scenes/EditScenes";
 import OverScenes from "src/components/scenes/OverScenes";
 import { RESULT, SCENE, TUTORIAL } from "src/constants/interface";
 import Image from "next/image";
+import { Toaster } from "react-hot-toast";
+import TitleComponent from "src/components/ingame/TitleComponent";
 
-const Ingame = () => {
+const Index = () => {
   const router = useRouter();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const chainId = useChainId();
   /**============================
  * useState
  ============================*/
@@ -30,7 +34,13 @@ const Ingame = () => {
   /**============================
  * useReadContract
  ============================*/
-  const playerStage = useReadPlayerStage();
+  const { data, refetch } = useReadContract({
+    abi: PlasmaBattleAlphaAbi,
+    address: addresses(chainId)!.PlasmaBattleAlpha as `0x${string}`,
+    functionName: "playerStage",
+    args: [address as `0x${string}`],
+  });
+
   const stamina = useReadPlayerStamina();
   const maxStamina = useReadMaxStamina();
 
@@ -39,10 +49,10 @@ const Ingame = () => {
  ============================*/
   //Set stage by contract data
   useEffect(() => {
-    if (playerStage !== undefined) {
-      setStage(Number(playerStage));
+    if (data !== undefined) {
+      setStage(Number(data));
     }
-  }, [playerStage]);
+  }, [data]);
 
   useEffect(() => {
     if (stamina !== undefined && maxStamina !== undefined) {
@@ -74,6 +84,7 @@ const Ingame = () => {
       {isConnected ? (
         <>
           <HeaderComponent stage={stage} leftStamina={leftStamina} />
+          <Toaster />
           {scene === SCENE.Edit ? (
             <EditScenes
               tutorial={tutorial}
@@ -97,22 +108,13 @@ const Ingame = () => {
               battleId={battleId}
               setTutorial={setTutorial}
               stage={stage}
-              setStage={setStage}
+              refetchStage={refetch}
             />
           )}
         </>
       ) : (
         <div className="flex flex-col items-center m-auto mt-24">
-          <div className=" mb-20">
-            <Image
-              src="/images/common/battlelayer_title.png"
-              alt="battlelayer_title"
-              width={480}
-              height={0}
-              className="w-full h-auto"
-              priority={true}
-            />
-          </div>
+          <TitleComponent />
           <ConnectWallet />
         </div>
       )}
@@ -120,4 +122,4 @@ const Ingame = () => {
   );
 };
 
-export default Ingame;
+export default Index;

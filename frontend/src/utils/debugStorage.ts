@@ -3,7 +3,6 @@ const initialStorage = {
   battleId: 0,
   playerStage: 0,
   playerUnitIds: [],
-  subUnitIds: [],
   battleResult: 0,
   signature: "",
   staminas: 0,
@@ -30,9 +29,6 @@ export const readStorage = (functionName: string) => {
   switch (functionName) {
     case "getPlayerUnits":
       return convertUnitIdsToBigInt(storage.playerUnitIds);
-
-    case "getSubUnits":
-      return convertUnitIdsToBigInt(storage.subUnitIds);
 
     case "getEnemyUnits":
       return convertUnitIdsToBigInt(
@@ -72,17 +68,15 @@ export const writeStorage = (functionName: string, args: any[]) => {
       storage.battleId = storage.battleId + 1;
       storage.staminas = storage.staminas + 1;
       storage.playerUnitIds = convertUnitIdsToNumber(args[0]);
-      storage.subUnitIds = convertUnitIdsToNumber(args[1]);
       break;
 
     case "endBattle":
       storage.battleId = Number(args[0]);
       storage.battleResult = Number(args[1]);
       storage.signature = args[2];
-      //If player wins, increment playerStage and add new unit on subUnits
       if (storage.battleResult === 1) {
         storage.playerStage = storage.playerStage + 1;
-        storage.subUnitIds.push(storage.newUnitByStage[storage.playerStage]);
+        storage.playerUnitIds.push(storage.newUnitByStage[storage.playerStage]);
       }
       break;
 
